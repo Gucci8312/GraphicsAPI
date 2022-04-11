@@ -70,12 +70,6 @@
     <FxCompile Include="Shader\PolygonVS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="Shader\PlanePS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\PlaneVS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
     <FxCompile Include="Shader\BasicPS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>

@@ -257,7 +257,8 @@ bool DirectX11Wrapper::PolygonInit()
 
 	//定数バッファ設定
 	D3D11_BUFFER_DESC cbDesc;
-	cbDesc.ByteWidth = sizeof(ConstantBuffer);
+	cbDesc.ByteWidth = (sizeof(ConstantBuffer)+0xff)&~0xff;
+	//cbDesc.ByteWidth = sizeof(ConstantBuffer);
 	cbDesc.Usage = D3D11_USAGE_DEFAULT;
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbDesc.CPUAccessFlags = 0;

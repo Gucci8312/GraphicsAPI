@@ -15,7 +15,7 @@ Application::~Application()
 
 bool Application::InitWnd()
 {
-	// インスタンスハンドルを取得.
+	// インスタンスハンドルを取得
 	auto hInst = GetModuleHandle(nullptr);
 	if (hInst == nullptr)
 	{
@@ -46,15 +46,15 @@ bool Application::InitWnd()
 	// ウインドウクラスの登録
 	if (!RegisterClassEx(&wcex)) return FALSE;
 
-	// インスタンスハンドル設定.
+	// インスタンスハンドル設定
 	m_hInst = hInst;
 
-	// ウィンドウのサイズを設定.
+	// ウィンドウのサイズを設定
 	RECT rc = {};
 	rc.right = static_cast<LONG>(m_Width);
 	rc.bottom = static_cast<LONG>(m_Height);
 
-	// ウィンドウサイズを調整.
+	// ウィンドウサイズを調整
 	auto style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
 	AdjustWindowRect(&rc, style, FALSE);
 
@@ -72,7 +72,7 @@ bool Application::InitWnd()
 	ShowWindow(m_hWnd, SW_SHOWNORMAL);
 	UpdateWindow(m_hWnd);
 
-	// ウィンドウにフォーカスを設定.
+	// ウィンドウにフォーカスを設定
 	SetFocus(m_hWnd);
 
 	// 正常終了.

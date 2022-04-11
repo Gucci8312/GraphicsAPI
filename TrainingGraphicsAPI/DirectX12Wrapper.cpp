@@ -7,13 +7,13 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	// デバッグ
 #if defined(DEBUG) || defined(_DEBUG)
 	{
-		ComPtr<ID3D12Debug> debug;
-		hr = D3D12GetDebugInterface(IID_PPV_ARGS(debug.ReleaseAndGetAddressOf()));
+		ComPtr<ID3D12Debug> Debug;
+		hr = D3D12GetDebugInterface(IID_PPV_ARGS(Debug.ReleaseAndGetAddressOf()));
 
-		// デバッグレイヤーを有効化.
+		// デバッグレイヤー有効化
 		if (SUCCEEDED(hr))
 		{
-			debug->EnableDebugLayer();
+			Debug->EnableDebugLayer();
 		}
 	}
 #endif
@@ -92,7 +92,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	RTVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	RTVHeapDesc.NodeMask = 0;
 
-	// ディスクリプタヒープを生成.
+	// ディスクリプタヒープ生成
 	hr = m_Device->CreateDescriptorHeap(&RTVHeapDesc, IID_PPV_ARGS(m_HeapRTV.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))	return hr;
 
@@ -113,14 +113,14 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 		viewDesc.Texture2D.MipSlice = 0;
 		viewDesc.Texture2D.PlaneSlice = 0;
 
-		// レンダーターゲットビューの生成.
+		// レンダーターゲットビュー生成
 		m_Device->CreateRenderTargetView(m_ColorBuffer[i].Get(), &viewDesc, handle);
 
 		m_HandleRTV[i] = handle;
 		handle.ptr += incrementSize;
 	}
 
-	// フェンスカウンターをリセット.
+	// フェンスカウンターリセット
 	for (auto i = 0u; i < FrameCount; ++i)
 	{
 		m_FenceCounter[i] = 0;
@@ -135,11 +135,11 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 
 	m_FenceCounter[m_FrameIndex]++;
 
-	// イベントの生成.
+	// イベント生成
 	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	if (m_FenceEvent == nullptr) return hr;
 
-	// コマンドリストを閉じる.
+	// コマンドリスト終了
 	m_CmdList->Close();
 
 	// ビューポート
@@ -281,7 +281,7 @@ void DirectX12Wrapper::BeforeRender()
 	// 更新処理
 	{
 		m_RotateAngle += 0.025f;
-		m_CBView[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationX(m_RotateAngle);
+		XMStoreFloat4x4(&m_CBView[m_FrameIndex].pBuffer->world,DirectX::XMMatrixRotationX(m_RotateAngle));
 	}
 	// コマンド入力開始
 	m_CmdAllocator[m_FrameIndex]->Reset();
@@ -486,7 +486,7 @@ bool DirectX12Wrapper::PolygonInit()
 	D3D12_RESOURCE_DESC CBResDesc = {};
 	CBResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	CBResDesc.Alignment = 0;
-	CBResDesc.Width = sizeof(Transform);
+	CBResDesc.Width = sizeof(ConstantBuffer);
 	CBResDesc.Height = 1;
 	CBResDesc.DepthOrArraySize = 1;
 	CBResDesc.MipLevels = 1;
@@ -517,7 +517,7 @@ bool DirectX12Wrapper::PolygonInit()
 		m_CBView[Idx].HandleCPU = HandleCPU;
 		m_CBView[Idx].HandleGPU = HandleGPU;
 		m_CBView[Idx].Desc.BufferLocation = Address;
-		m_CBView[Idx].Desc.SizeInBytes = sizeof(Transform);
+		m_CBView[Idx].Desc.SizeInBytes = sizeof(ConstantBuffer);
 
 		// 定数バッファビュー生成
 		m_Device->CreateConstantBufferView(&m_CBView[Idx].Desc, HandleCPU);
@@ -537,9 +537,9 @@ bool DirectX12Wrapper::PolygonInit()
 		auto aspect = static_cast<float>(1200) / static_cast<float>(800);
 
 		// 変換行列の設定.
-		m_CBView[Idx].pBuffer->World = DirectX::XMMatrixIdentity();
-		m_CBView[Idx].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
-		m_CBView[Idx].pBuffer->Proj = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 1000.0f);
+		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->world ,DirectX::XMMatrixIdentity());
+		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->view , DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward));
+		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->projection , DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 1000.0f));
 	}
 
 	auto flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -861,7 +861,7 @@ bool DirectX12Wrapper::CubeInit()
 	D3D12_RESOURCE_DESC CBResDesc = {};
 	CBResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	CBResDesc.Alignment = 0;
-	CBResDesc.Width = sizeof(Transform);
+	CBResDesc.Width = (sizeof(ConstantBuffer)+0xff)&~0xff;
 	CBResDesc.Height = 1;
 	CBResDesc.DepthOrArraySize = 1;
 	CBResDesc.MipLevels = 1;
@@ -892,7 +892,7 @@ bool DirectX12Wrapper::CubeInit()
 		m_CBView[Idx].HandleCPU = HandleCPU;
 		m_CBView[Idx].HandleGPU = HandleGPU;
 		m_CBView[Idx].Desc.BufferLocation = Address;
-		m_CBView[Idx].Desc.SizeInBytes = sizeof(Transform);
+		m_CBView[Idx].Desc.SizeInBytes = (sizeof(ConstantBuffer) + 0xff) & ~0xff;
 
 		// 定数バッファビュー生成
 		m_Device->CreateConstantBufferView(&m_CBView[Idx].Desc, HandleCPU);
@@ -912,9 +912,9 @@ bool DirectX12Wrapper::CubeInit()
 		auto aspect = static_cast<float>(1200) / static_cast<float>(800);
 
 		// 変換行列の設定.
-		m_CBView[Idx].pBuffer->World = DirectX::XMMatrixIdentity();
-		m_CBView[Idx].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
-		m_CBView[Idx].pBuffer->Proj = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 1000.0f);
+		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->world , DirectX::XMMatrixIdentity());
+		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->view , DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward));
+		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->projection , DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 1000.0f));
 	}
 
 	auto flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;

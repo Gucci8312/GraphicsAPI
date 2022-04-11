@@ -1,11 +1,12 @@
 #include "psvsHeader.hlsli"
 
 
-cbuffer Transform : register( b0 )
+cbuffer ConstantBuffer
 {
-    float4x4 World : packoffset( c0 ); // ワールド行列です.
-    float4x4 View  : packoffset( c4 ); // ビュー行列です.
-    float4x4 Proj  : packoffset( c8 ); // 射影行列です.
+    float4x4 World; //ワールド変換行列
+    float4x4 View; //ビュー変換行列
+    float4x4 Projection; //透視射影変換行列
+    float4 Light;
 }
 
 VS_OUT main( VS_IN input )
@@ -15,7 +16,7 @@ VS_OUT main( VS_IN input )
     float4 localPos = input.pos;
     float4 worldPos = mul( World, localPos );
     float4 viewPos  = mul( View,  worldPos );
-    float4 projPos  = mul( Proj,  viewPos );
+    float4 projPos  = mul(Projection,  viewPos );
 
     output.pos = projPos;
     output.col    = input.col;
