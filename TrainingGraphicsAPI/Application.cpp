@@ -194,8 +194,8 @@ void Application::Finalize()
 	{
 		ApiWrapper->Release();
 	}
-	delete ApiWrapper;
-	ApiWrapper = nullptr;
+	//delete ApiWrapper;
+	//ApiWrapper = nullptr;
 
 }
 
@@ -204,11 +204,14 @@ LRESULT CALLBACK Application::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	switch (msg)
 	{
 	case WM_DESTROY:
-	{ PostQuitMessage(0); }
+	{
+		PostQuitMessage(0);
+	}
 	break;
 
 	default:
-	{ }
+	{
+	}
 	break;
 	}
 

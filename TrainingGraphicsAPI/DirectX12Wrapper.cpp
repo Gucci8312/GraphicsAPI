@@ -8,7 +8,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 #if defined(DEBUG) || defined(_DEBUG)
 	{
 		ComPtr<ID3D12Debug> debug;
-		auto hr = D3D12GetDebugInterface(IID_PPV_ARGS(debug.ReleaseAndGetAddressOf()));
+		hr = D3D12GetDebugInterface(IID_PPV_ARGS(debug.ReleaseAndGetAddressOf()));
 
 		// デバッグレイヤーを有効化.
 		if (SUCCEEDED(hr))
@@ -450,7 +450,7 @@ bool DirectX12Wrapper::PolygonInit()
 	// インデックスデータ転送開始
 	void* SendIndexData = nullptr;
 	hr = m_IndexBuffer->Map(0, nullptr, &SendIndexData);
-	if (FAILED(hr)) return hr;
+	if (FAILED(hr)) return false;
 
 	// 転送
 	memcpy(SendIndexData, Indices, sizeof(Indices));
@@ -533,7 +533,7 @@ bool DirectX12Wrapper::PolygonInit()
 		auto targetPos = DirectX::XMVectorZero();
 		auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-		auto fovY = DirectX::XMConvertToRadians(37.5f);
+		constexpr auto fovY = DirectX::XMConvertToRadians(37.5f);
 		auto aspect = static_cast<float>(1200) / static_cast<float>(800);
 
 		// 変換行列の設定.
@@ -603,10 +603,10 @@ bool DirectX12Wrapper::PolygonInit()
 
 	D3D12_INPUT_ELEMENT_DESC VertexLayout[] =
 	{
-		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-		{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{"NORMAL" , 0,DXGI_FORMAT_R32G32B32_FLOAT,   0,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-		{"TEXCOORD" , 0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,      0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"NORMAL" , 0,DXGI_FORMAT_R32G32B32_FLOAT,      0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"TEXCOORD" , 0, DXGI_FORMAT_R32G32_FLOAT,		0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 
 	// レンダーターゲットのブレンド設定.
@@ -793,8 +793,6 @@ bool DirectX12Wrapper::CubeInit()
 	m_VBView.StrideInBytes = static_cast<UINT>(sizeof(Vertex));
 
 
-
-
 	m_IndexNum = ARRAYSIZE(Indices);
 
 	// インデックスバッファ設定
@@ -827,7 +825,7 @@ bool DirectX12Wrapper::CubeInit()
 	// インデックスデータ転送開始
 	void* SendIndexData = nullptr;
 	hr = m_IndexBuffer->Map(0, nullptr, &SendIndexData);
-	if (FAILED(hr)) return hr;
+	if (FAILED(hr)) return false;
 
 	// 転送
 	memcpy(SendIndexData, Indices, sizeof(Indices));
@@ -910,7 +908,7 @@ bool DirectX12Wrapper::CubeInit()
 		auto targetPos = DirectX::XMVectorZero();
 		auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-		auto fovY = DirectX::XMConvertToRadians(37.5f);
+		constexpr auto fovY = DirectX::XMConvertToRadians(37.5f);
 		auto aspect = static_cast<float>(1200) / static_cast<float>(800);
 
 		// 変換行列の設定.
@@ -1114,7 +1112,7 @@ bool DirectX12Wrapper::CreateTexture()
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(m_Texture.pResouce.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return false;
 
-	hr = m_Texture.pResouce->WriteToSubresource(0, nullptr, TextureData.data(), sizeof(TexRGBA) * 256, sizeof(TexRGBA) * TextureData.size());
+	hr = m_Texture.pResouce->WriteToSubresource(0, nullptr, TextureData.data(), sizeof(TexRGBA) * 256, sizeof(TexRGBA) * (UINT)TextureData.size());
 	if (FAILED(hr)) return false;
 
 	auto IncrementSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

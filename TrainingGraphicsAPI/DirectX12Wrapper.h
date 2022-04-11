@@ -54,19 +54,19 @@ private:
 	ComPtr<ID3D12PipelineState>            m_PSO;
 	ComPtr<ID3D12Resource>				   m_DepthBuffer;
 
-	HANDLE                          m_FenceEvent;
+	HANDLE                          m_FenceEvent = {};
 	uint64_t                        m_FenceCounter[FrameCount];
-	uint32_t                        m_FrameIndex;
+	uint32_t                        m_FrameIndex = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE     m_HandleRTV[FrameCount];
-	D3D12_CPU_DESCRIPTOR_HANDLE     m_HandleDSV;
-	D3D12_VERTEX_BUFFER_VIEW        m_VBView;
-	D3D12_INDEX_BUFFER_VIEW         m_IBView;
-	D3D12_VIEWPORT                  m_ViewPort;
-	D3D12_RECT                      m_Scissor;
+	D3D12_CPU_DESCRIPTOR_HANDLE     m_HandleDSV={};
+	D3D12_VERTEX_BUFFER_VIEW        m_VBView = {};
+	D3D12_INDEX_BUFFER_VIEW         m_IBView = {};
+	D3D12_VIEWPORT                  m_ViewPort={};
+	D3D12_RECT                      m_Scissor = {};
 	ConstantBufferView<Transform>   m_CBView[FrameCount * 2];
-	float                           m_RotateAngle;
-	int								m_IndexNum;
-	Texture							m_Texture;
+	float                           m_RotateAngle=0.0f;
+	int								m_IndexNum = 0;
+	Texture							m_Texture = {};
 
 public:
 	HRESULT Create(HWND hwnd, RECT rc) override final;

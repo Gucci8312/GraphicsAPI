@@ -13,20 +13,18 @@
 class Application
 {
 private:
-	HINSTANCE   m_hInst;        // インスタンスハンドルです.
-	HWND        m_hWnd;         // ウィンドウハンドルです.
-	uint32_t    m_Width;        // ウィンドウの横幅です.
-	uint32_t    m_Height;       // ウィンドウの縦幅です.
+	HINSTANCE   m_hInst = nullptr;
+	HWND        m_hWnd = nullptr;
+	LONG		m_Width;
+	LONG		m_Height;
 
 	void Update();
 	void Render();
-	DirectXAllRapper* ApiWrapper;
+	DirectXAllRapper* ApiWrapper = nullptr;
 public:
 	//void (Application::* Process)();
 	bool Initialize();
 	void Finalize();
-
-	
 
 	Application(uint32_t Width, uint32_t Height);
 	~Application();

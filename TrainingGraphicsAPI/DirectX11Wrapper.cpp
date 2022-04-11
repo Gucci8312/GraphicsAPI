@@ -72,8 +72,7 @@ HRESULT DirectX11Wrapper::Create(HWND hwnd, RECT rc)
 #endif
 
 	// スワップチェイン設定
-	DXGI_SWAP_CHAIN_DESC sd;
-	ZeroMemory(&sd, sizeof(sd));
+	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferCount = 1;
 	sd.BufferDesc.Width = rc.right;
 	sd.BufferDesc.Height = rc.bottom;
@@ -119,8 +118,7 @@ HRESULT DirectX11Wrapper::Create(HWND hwnd, RECT rc)
 	}
 
 	// 深度ステンシルバッファ作成
-	D3D11_TEXTURE2D_DESC txDesc;
-	ZeroMemory(&txDesc, sizeof(txDesc));
+	D3D11_TEXTURE2D_DESC txDesc = {};
 	txDesc.Width = rc.right;
 	txDesc.Height = rc.bottom;
 	txDesc.MipLevels = 1;
@@ -138,8 +136,7 @@ HRESULT DirectX11Wrapper::Create(HWND hwnd, RECT rc)
 		return E_FAIL;
 	}
 
-	D3D11_DEPTH_STENCIL_VIEW_DESC dsDesc;
-	ZeroMemory(&dsDesc, sizeof(dsDesc));
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsDesc = {};
 	dsDesc.Format = txDesc.Format;
 	dsDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsDesc.Texture2D.MipSlice = 0;
@@ -230,7 +227,7 @@ bool DirectX11Wrapper::PolygonInit()
 	// 頂点シェーダー作成
 	if (FAILED(m_Device->CreateVertexShader(vsblob->GetBufferPointer(), vsblob->GetBufferSize(), NULL, m_VertexShader.ReleaseAndGetAddressOf())))
 	{
-		return E_FAIL;
+		return false;
 	}
 
 	// 頂点データ設定
@@ -245,7 +242,7 @@ bool DirectX11Wrapper::PolygonInit()
 	// インプットレイアウト作成
 	if (FAILED(m_Device->CreateInputLayout(VertexDesc, ARRAYSIZE(VertexDesc), vsblob->GetBufferPointer(), vsblob->GetBufferSize(), m_InputLayOut.ReleaseAndGetAddressOf())))
 	{
-		return E_FAIL;
+		return false;
 	}
 
 	// ピクセルシェーダーコンパイル
@@ -255,7 +252,7 @@ bool DirectX11Wrapper::PolygonInit()
 	// ピクセルシェーダー作成
 	if (FAILED(m_Device->CreatePixelShader(psblob->GetBufferPointer(), psblob->GetBufferSize(), NULL, m_PixelShader.ReleaseAndGetAddressOf())))
 	{
-		return E_FAIL;
+		return false;
 	}
 
 	//定数バッファ設定
@@ -283,7 +280,7 @@ bool DirectX11Wrapper::PolygonInit()
 	XMMATRIX viewMatrix = XMMatrixLookAtLH(eye, focus, up);		// ビュー変換
 
 	// プロジェクション変換
-	float    fov = XMConvertToRadians(45.0f);					// 視野角
+	constexpr float    fov = XMConvertToRadians(45.0f);					// 視野角
 	float    aspect = m_ViewPort.Width / m_ViewPort.Height;		// アスペクト比
 	float    nearZ = 0.1f;										// 近
 	float    farZ = 100.0f;										// 遠
@@ -470,7 +467,7 @@ bool DirectX11Wrapper::CubeInit()
 	XMMATRIX viewMatrix = XMMatrixLookAtLH(eye, focus, up);		// ビュー変換
 
 	// プロジェクション変換
-	float    fov = XMConvertToRadians(45.0f);					// 視野角
+	constexpr float    fov = XMConvertToRadians(45.0f);					// 視野角
 	float    aspect = m_ViewPort.Width / m_ViewPort.Height;		// アスペクト比
 	float    nearZ = 0.1f;										// 近
 	float    farZ = 100.0f;										// 遠
@@ -507,7 +504,7 @@ void DirectX11Wrapper::ObjectUpdate()
 	XMMATRIX viewMatrix = XMMatrixLookAtLH(eye, focus, up);		// ビュー変換
 
 	// プロジェクション変換
-	float    fov = XMConvertToRadians(45.0f);					// 視野角
+	constexpr float    fov = XMConvertToRadians(45.0f);					// 視野角
 	float    aspect = m_ViewPort.Width / m_ViewPort.Height;		// アスペクト比
 	float    nearZ = 0.1f;										// 近
 	float    farZ = 100.0f;										// 遠
@@ -568,9 +565,9 @@ bool DirectX11Wrapper::CreateTexture()
 	// テクスチャデータ作成
 	for (int i = 0; i < PixelSize * PixelSize * 4; i += 4)
 	{
-		srcData[i] = number(random);		//　Red
-		srcData[i + 1] = number(random);	//　Green
-		srcData[i + 2] = number(random);	//　Blue
+		srcData[i] = (byte)number(random);		//　Red
+		srcData[i + 1] = (byte)number(random);	//　Green
+		srcData[i + 2] = (byte)number(random);	//　Blue
 	}
 
 	// データ書き込み
@@ -578,8 +575,7 @@ bool DirectX11Wrapper::CreateTexture()
 	m_ImmediateContext->Unmap(CreateTexture.Get(), 0);
 
 	// シェーダーリソースビュー設定
-	D3D11_SHADER_RESOURCE_VIEW_DESC srv;
-	ZeroMemory(&srv, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	D3D11_SHADER_RESOURCE_VIEW_DESC srv = {};
 	srv.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	srv.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srv.Texture2D.MipLevels = 1;
