@@ -1,14 +1,5 @@
 #include "psvsHeader.hlsli"
 
-
-cbuffer ConstantBuffer
-{
-    float4x4 World; //ワールド変換行列
-    float4x4 View; //ビュー変換行列
-    float4x4 Projection; //透視射影変換行列
-    float4 Light;
-}
-
 VS_OUT main( VS_IN input )
 {
     VS_OUT output = (VS_OUT) 0;
