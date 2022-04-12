@@ -32,8 +32,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	#if defined(DEBUG) || defined(_DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	DirectX11Wrapper Directx;
-	//DirectX12Wrapper Directx;
+	//DirectX11Wrapper Directx;
+	DirectX12Wrapper Directx;
 
 	HWND			hwnd;								// ウインドウハンドル
 	MSG				msg;								// メッセージ構造体
@@ -86,8 +86,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	Camera::GetInstance().Init(SCREEN_WIDTH,SCREEN_HEIGHT, EyePos, TargetPos, UpVector, 1.0f, 100.0f);
 	auto aa=Camera::GetInstance().GetProjMatrix();
 
-	Directx.PolygonInit();
-	//Directx.CubeInit();
+	//Directx.PolygonInit();
+	Directx.CubeInit();
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
