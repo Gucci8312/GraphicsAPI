@@ -188,7 +188,7 @@ void DirectX11Wrapper::BeforeRender()
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_ImmediateContext->ClearRenderTargetView(m_RenderTargetView.Get(), clearColor);
 	m_ImmediateContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	
+
 	m_ImmediateContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get());
 	m_ImmediateContext->RSSetState(m_RasterState.Get());
 	m_ImmediateContext->RSSetViewports(1, &m_ViewPort);
@@ -346,6 +346,7 @@ void DirectX11Wrapper::ObjectDraw()
 	m_ImmediateContext->DrawIndexed(m_IndexNum, 0, 0);
 }
 
+// オブジェクト更新
 void DirectX11Wrapper::ObjectUpdate()
 {
 	static float Angle = 0;

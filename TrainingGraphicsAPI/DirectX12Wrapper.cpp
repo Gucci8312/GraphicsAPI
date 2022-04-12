@@ -279,6 +279,7 @@ void DirectX12Wrapper::ObjectDraw()
 	m_CmdList->DrawIndexedInstanced(m_IndexNum, 1, 0, 0, 0);
 }
 
+// オブジェクト更新
 void DirectX12Wrapper::ObjectUpdate()
 {
 	m_RotateAngle += 0.025f;
