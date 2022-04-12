@@ -1,5 +1,6 @@
 #include "DirectX12Wrapper.h"
 
+// 初期化処理
 HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 {
 	HRESULT hr;
@@ -218,17 +219,18 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	return S_OK;
 }
 
+// 終了処理
 void DirectX12Wrapper::Release()
 {
-	//for (auto Idx = 0; Idx < FrameCount; ++Idx)
-	//{
-	//	if (m_ConstantBuffer[Idx].Get() != nullptr)
-	//	{
-	//		m_ConstantBuffer[Idx]->Unmap(0, nullptr);
-	//		memset(&m_CBView[Idx], 0, sizeof(m_ConstantBuffer[Idx]));
-	//	}
-	//	m_ConstantBuffer[Idx].Reset();
-	//}
+	for (auto Idx = 0; Idx < FrameCount; ++Idx)
+	{
+		if (m_ConstantBuffer[Idx].Get() != nullptr)
+		{
+			m_ConstantBuffer[Idx]->Unmap(0, nullptr);
+			//memset(&m_CBView[Idx], 0, sizeof(m_ConstantBuffer[Idx]));
+		}
+		//m_ConstantBuffer[Idx].Reset();
+	}
 
 	// フェンス処理
 	WaitGPU();
@@ -241,26 +243,27 @@ void DirectX12Wrapper::Release()
 	}
 }
 
+// フェンス処理
 void DirectX12Wrapper::WaitGPU()
 {
 	assert(m_CmdQueue != nullptr);
 	assert(m_Fence != nullptr);
 	assert(m_FenceEvent != nullptr);
 
-	// シグナル処理.
+	// シグナル
 	m_CmdQueue->Signal(m_Fence.Get(), m_FenceCounter[m_FrameIndex]);
 
-	// 完了時にイベントを設定する..
+	// 完了時にイベント設定
 	m_Fence->SetEventOnCompletion(m_FenceCounter[m_FrameIndex], m_FenceEvent);
 
-	// 待機処理.
+	// 待機処理
 	WaitForSingleObjectEx(m_FenceEvent, INFINITE, FALSE);
 
-	// カウンターを増やす.
+	// カウンター増加
 	m_FenceCounter[m_FrameIndex]++;
 }
 
-// 描画前処理
+// オブジェクト描画
 void DirectX12Wrapper::ObjectDraw()
 {
 	m_CmdList->SetGraphicsRootSignature(m_RootSignature.Get());
@@ -276,6 +279,7 @@ void DirectX12Wrapper::ObjectDraw()
 	m_CmdList->DrawIndexedInstanced(m_IndexNum, 1, 0, 0, 0);
 }
 
+// 描画前処理
 void DirectX12Wrapper::BeforeRender()
 {
 	// 更新処理
@@ -307,6 +311,7 @@ void DirectX12Wrapper::BeforeRender()
 
 }
 
+// 描画後処理
 void DirectX12Wrapper::AfterRender()
 {
 	SetResouceBarrier(m_ColorBuffer[m_FrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -356,17 +361,17 @@ void DirectX12Wrapper::SetResouceBarrier(ID3D12Resource* Resouce, D3D12_RESOURCE
 	m_CmdList->ResourceBarrier(1, &BarrierDesc);
 }
 
-
+// ポリゴン初期化
 bool DirectX12Wrapper::PolygonInit()
 {
-	// 頂点データ
-	Vertex VertexList[]{
-		{ { -0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,0.0f}},
-		{ {  0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,0.0f}},
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,1.0f}},
-		{ {  0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,1.0f}}
+	// 頂点リスト
+	Vertex VertexList[]
+	{
+		{{-0.5f,-0.5f, 0.0f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{0.0f,0.0f}},
+		{{-0.5f, 0.5f, 0.0f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{1.0f,0.0f}},
+		{{ 0.5f,-0.5f, 0.0f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{0.0f,1.0f}},
+		{{ 0.5f, 0.5f, 0.0f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{1.0f,1.0f}},
 	};
-
 
 	// 頂点バッファ設定
 	D3D12_HEAP_PROPERTIES VBProp = {};
@@ -412,13 +417,13 @@ bool DirectX12Wrapper::PolygonInit()
 	m_VBView.StrideInBytes = static_cast<UINT>(sizeof(Vertex));
 
 	// インデックスリスト
-	uint32_t Indices[] =
+	uint32_t IndexList[] =
 	{
-		0, 1, 2,
-		0, 3, 1,
+		 0,  1,  2,   3,  2,  1,
 	};
 
-	m_IndexNum = ARRAYSIZE(Indices);
+	// 描画用インデックス数取得
+	m_IndexNum = ARRAYSIZE(IndexList);
 
 	// インデックスバッファ設定
 	D3D12_HEAP_PROPERTIES IBProp = {};
@@ -432,7 +437,7 @@ bool DirectX12Wrapper::PolygonInit()
 	D3D12_RESOURCE_DESC IBResDesc = {};
 	IBResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	IBResDesc.Alignment = 0;
-	IBResDesc.Width = sizeof(Indices);
+	IBResDesc.Width = sizeof(IndexList);
 	IBResDesc.Height = 1;
 	IBResDesc.DepthOrArraySize = 1;
 	IBResDesc.MipLevels = 1;
@@ -453,7 +458,7 @@ bool DirectX12Wrapper::PolygonInit()
 	if (FAILED(hr)) return false;
 
 	// 転送
-	memcpy(SendIndexData, Indices, sizeof(Indices));
+	memcpy(SendIndexData, IndexList, sizeof(IndexList));
 
 	// インデックスデータ転送終了
 	m_IndexBuffer->Unmap(0, nullptr);
@@ -461,7 +466,7 @@ bool DirectX12Wrapper::PolygonInit()
 	// インデックスバッファビュー設定
 	m_IBView.BufferLocation = m_IndexBuffer->GetGPUVirtualAddress();
 	m_IBView.Format = DXGI_FORMAT_R32_UINT;
-	m_IBView.SizeInBytes = sizeof(Indices);
+	m_IBView.SizeInBytes = sizeof(IndexList);
 
 	// 定数バッファ用ディスクリプタヒープ設定
 	D3D12_DESCRIPTOR_HEAP_DESC BasicDesc = {};
@@ -628,7 +633,6 @@ bool DirectX12Wrapper::PolygonInit()
 	DepStencilDesc.StencilEnable = false;
 
 	ComPtr<ID3DBlob> VSBlob;
-	ComPtr<ID3DBlob> PSBlob;
 
 	// 頂点シェーダー読み込み
 	if (!CompileShader("Shader/SimpleVS.hlsl", "main", "vs_5_0", VSBlob.ReleaseAndGetAddressOf()))
@@ -636,8 +640,9 @@ bool DirectX12Wrapper::PolygonInit()
 		return false;
 	}
 
+	ComPtr<ID3DBlob> PSBlob;
 	// ピクセルシェーダー読み込み
-	if (!CompileShader("Shader/SimplePS.hlsl", "main", "ps_5_0", PSBlob.ReleaseAndGetAddressOf()))
+	if (!CompileShader("Shader/TexturePS.hlsl", "main", "ps_5_0", PSBlob.ReleaseAndGetAddressOf()))
 	{
 		return false;
 	}
@@ -686,59 +691,60 @@ bool DirectX12Wrapper::PolygonInit()
 	return true;
 }
 
+// キューブ初期化
 bool DirectX12Wrapper::CubeInit()
 {
-	// 頂点データ
+	// 頂点リスト
 	Vertex VertexList[]
 	{
 		// 前面
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,0.0f}},
-		{ { -0.5f,  0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,0.0f}},
-		{ {  0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,1.0f}},
-		{ {  0.5f,  0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,1.0f}},
+		{{-0.5f,-0.5f, 0.5f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{0.0f,0.0f}},
+		{{-0.5f, 0.5f, 0.5f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{1.0f,0.0f}},
+		{{ 0.5f,-0.5f, 0.5f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{0.0f,1.0f}},
+		{{ 0.5f, 0.5f, 0.5f},{ 1.0f, 0.0f, 0.0f, 1.0f},{ 0.0f, 0.0f,-1.0f},{1.0f,1.0f}},
 
 		// 後面
-		{ { -0.5f, -0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,0.0f}},
-		{ { -0.5f,  0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,0.0f}},
-		{ {  0.5f, -0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,1.0f}},
-		{ {  0.5f,  0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,1.0f}},
+		{{-0.5f,-0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{0.0f,0.0f}},
+		{{-0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{1.0f,0.0f}},
+		{{ 0.5f,-0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{0.0f,1.0f}},
+		{{ 0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{1.0f,1.0f}},
 
 		// 右面
-		{ { 0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {0.0f,0.0f}},
-		{ { 0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {1.0f,0.0f}},
-		{ { 0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {0.0f,1.0f}},
-		{ { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {1.0f,1.0f}},
+		{{ 0.5f, 0.5f, 0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
+		{{ 0.5f, 0.5f,-0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{1.0f,0.0f}},
+		{{ 0.5f,-0.5f, 0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{0.0f,1.0f}},
+		{{ 0.5f,-0.5f,-0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{1.0f,1.0f}},
 
 		// 左面
-		{ {  -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {0.0f,0.0f}},
-		{ {  -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {1.0f,0.0f}},
-		{ {  -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {0.0f,1.0f}},
-		{ {  -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {1.0f,1.0f}},
+		{{-0.5f, 0.5f, 0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
+		{{-0.5f,-0.5f, 0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{1.0f,0.0f}},
+		{{-0.5f, 0.5f,-0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{0.0f,1.0f}},
+		{{-0.5f,-0.5f,-0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{1.0f,1.0f}},
 
 
 		// 上面
-		{ { -0.5f, 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {0.0f,0.0f}},
-		{ { -0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {1.0f,0.0f}},
-		{ {  0.5f, 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {0.0f,1.0f}},
-		{ {  0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {1.0f,1.0f}},
+		{{-0.5f, 0.5f, 0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{0.0f,0.0f}},
+		{{-0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{1.0f,0.0f}},
+		{{ 0.5f, 0.5f, 0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{0.0f,1.0f}},
+		{{ 0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{1.0f,1.0f}},
 
 		// 下面
-		{ { -0.5f,  -0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,0.0f}},
-		{ {  0.5f,  -0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,0.0f}},
-		{ { -0.5f,  -0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,1.0f}},
-		{ {  0.5f,  -0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,1.0f}},
+		{{-0.5f,-0.5f, 0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+		{{ 0.5f,-0.5f, 0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{1.0f,0.0f}},
+		{{-0.5f,-0.5f,-0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{0.0f,1.0f}},
+		{{ 0.5f,-0.5f,-0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{1.0f,1.0f}},
 
 	};
 
 	// インデックスリスト
-	uint32_t Indices[] =
+	uint32_t IndexList[] =
 	{
-		 0,  1,  2,   3,  2,  1,	// 前面
-		 6,  5,  4,   5,  6,  7,    // 後面
-		 8,  9,  10,  11, 10, 9,	// 右面
-		12,  13, 14,  15, 14, 13,	// 左面
-		16,  17, 18,  19, 18, 17,	// 上面
-		20,  21, 22,  23, 22, 21,	// 下面
+		 0,   1,  2,     3,  2,  1,	 // 前面
+		 6,   5,  4,     5,  6,  7,  // 後面
+		 8,   9, 10,    11, 10,  9,	 // 右面
+		12,  13, 14,    15, 14, 13,	 // 左面
+		16,  17, 18,    19, 18, 17,	 // 上面
+		20,  21, 22,    23, 22, 21,  // 下面
 	};
 
 
@@ -785,8 +791,8 @@ bool DirectX12Wrapper::CubeInit()
 	m_VBView.SizeInBytes = static_cast<UINT>(sizeof(VertexList));
 	m_VBView.StrideInBytes = static_cast<UINT>(sizeof(Vertex));
 
-
-	m_IndexNum = ARRAYSIZE(Indices);
+	// 描画用インデックス数取得
+	m_IndexNum = ARRAYSIZE(IndexList);
 
 	// インデックスバッファ設定
 	D3D12_HEAP_PROPERTIES IBProp = {};
@@ -800,7 +806,7 @@ bool DirectX12Wrapper::CubeInit()
 	D3D12_RESOURCE_DESC IBResDesc = {};
 	IBResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	IBResDesc.Alignment = 0;
-	IBResDesc.Width = sizeof(Indices);
+	IBResDesc.Width = sizeof(IndexList);
 	IBResDesc.Height = 1;
 	IBResDesc.DepthOrArraySize = 1;
 	IBResDesc.MipLevels = 1;
@@ -821,7 +827,7 @@ bool DirectX12Wrapper::CubeInit()
 	if (FAILED(hr)) return false;
 
 	// 転送
-	memcpy(SendIndexData, Indices, sizeof(Indices));
+	memcpy(SendIndexData, IndexList, sizeof(IndexList));
 
 	// インデックスデータ転送終了
 	m_IndexBuffer->Unmap(0, nullptr);
@@ -829,7 +835,7 @@ bool DirectX12Wrapper::CubeInit()
 	// インデックスバッファビュー設定
 	m_IBView.BufferLocation = m_IndexBuffer->GetGPUVirtualAddress();
 	m_IBView.Format = DXGI_FORMAT_R32_UINT;
-	m_IBView.SizeInBytes = sizeof(Indices);
+	m_IBView.SizeInBytes = sizeof(IndexList);
 
 	// 定数バッファ用ディスクリプタヒープ設定
 	D3D12_DESCRIPTOR_HEAP_DESC BasicDesc = {};
@@ -1005,7 +1011,7 @@ bool DirectX12Wrapper::CubeInit()
 	}
 
 	// ピクセルシェーダー読み込み
-	if (!CompileShader("Shader/SimplePS.hlsl", "main", "ps_5_0", PSBlob.ReleaseAndGetAddressOf()))
+	if (!CompileShader("Shader/TexturePS.hlsl", "main", "ps_5_0", PSBlob.ReleaseAndGetAddressOf()))
 	{
 		return false;
 	}
@@ -1054,7 +1060,6 @@ bool DirectX12Wrapper::CubeInit()
 	return true;
 }
 
-
 // テクスチャ生成
 bool DirectX12Wrapper::CreateTexture()
 {
@@ -1071,6 +1076,8 @@ bool DirectX12Wrapper::CreateTexture()
 		rgba.B = rand() % 256;
 		rgba.A = 255;
 	}
+
+	//for8
 
 	// テクスチャ用バッファ設定
 	D3D12_HEAP_PROPERTIES TexHeapProp = {};
@@ -1093,14 +1100,16 @@ bool DirectX12Wrapper::CreateTexture()
 	TexResDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	TexResDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-
+	// テクスチャリソース生成
 	HRESULT hr = m_Device->CreateCommittedResource(&TexHeapProp, D3D12_HEAP_FLAG_NONE, &TexResDesc,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(m_Texture.pResouce.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return false;
 
+	// テクスチャ書き込み
 	hr = m_Texture.pResouce->WriteToSubresource(0, nullptr, TextureData.data(), sizeof(TexRGBA) * 256, sizeof(TexRGBA) * (UINT)TextureData.size());
 	if (FAILED(hr)) return false;
 
+	// インクリメント用サイズ取得
 	auto IncrementSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	auto HandleCPU = m_BasicDescHeap->GetCPUDescriptorHandleForHeapStart();
 	auto HandleGPU = m_BasicDescHeap->GetGPUDescriptorHandleForHeapStart();

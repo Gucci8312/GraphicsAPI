@@ -7,6 +7,7 @@
 
 #pragma comment(lib,"d3d11.lib")
 
+// DirectX11èâä˙âªÉNÉâÉX
 class DirectX11Wrapper :public DirectXAllRapper
 {
 private:
@@ -26,15 +27,15 @@ private:
 	ComPtr<ID3D11ShaderResourceView>	NoiseTextureResouce;
 	ComPtr<ID3D11SamplerState>			m_SamplerState;
 	ComPtr<ID3D11RasterizerState>		m_RasterState;
-	int									IndexNum=0;
+	int									m_IndexNum=0;
 
 public:
-	HRESULT Create(HWND hwnd, RECT rc) override final;
-	void    Release() override final;
-	void	BeforeRender() override final;
-	void	AfterRender() override final;
-	bool	PolygonInit() override final;
-	bool	CubeInit() override final;
-	void	ObjectDraw() override final;
+	HRESULT Create(HWND hwnd, RECT rc)	override final;
+	void    Release()					override final;
+	void	BeforeRender()				override final;
+	void	AfterRender()				override final;
+	bool	PolygonInit()				override final;
+	bool	CubeInit()					override final;
+	void	ObjectDraw()				override final;
 	bool	CreateTexture();
 };

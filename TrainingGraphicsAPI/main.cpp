@@ -38,12 +38,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	HWND			hwnd;								// ウインドウハンドル
 	MSG				msg;								// メッセージ構造体
 	WNDCLASSEX		wcex;								// ウインドウクラス構造体
-	DWORD timeBefore;
+	DWORD			timeBefore;
 
-	// メモリリークを検知
+	// メモリリーク検知
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	// ウインドウクラス情報のセット
+	// ウインドウクラス情報セット
 	wcex.hInstance = hInstance;
 	wcex.lpszClassName = NAME;
 	wcex.lpfnWndProc = (WNDPROC)WndProc;
@@ -83,11 +83,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	XMFLOAT3 UpVector = { 0.0f, 1.0f, 0.0f };
 
 	// カメラ初期化
-	Camera::GetInstance().Init(SCREEN_WIDTH,SCREEN_HEIGHT, EyePos, TargetPos, UpVector, 1.0f, 1000.0f);
+	Camera::GetInstance().Init(SCREEN_WIDTH,SCREEN_HEIGHT, EyePos, TargetPos, UpVector, 1.0f, 100.0f);
 	auto aa=Camera::GetInstance().GetProjMatrix();
 
-	//Directx.PolygonInit();
-	Directx.CubeInit();
+	Directx.PolygonInit();
+	//Directx.CubeInit();
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);

@@ -26,6 +26,7 @@ struct Texture
 	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
 };
 
+// DirectX12èâä˙âªÉNÉâÉX
 class DirectX12Wrapper : public DirectXAllRapper
 {
 private:
@@ -62,13 +63,13 @@ private:
 	Texture							       m_Texture = {};
 
 public:
-	HRESULT Create(HWND hwnd, RECT rc) override final;
-	void    Release() override final;
-	void	BeforeRender() override final;
-	void	AfterRender() override final;
-	bool	PolygonInit() override final;
-	bool	CubeInit() override final;
-	void	ObjectDraw() override final;
+	HRESULT Create(HWND hwnd, RECT rc)	override final;
+	void    Release()					override final;
+	void	BeforeRender()				override final;
+	void	AfterRender()				override final;
+	bool	PolygonInit()				override final;
+	bool	CubeInit()					override final;
+	void	ObjectDraw()				override final;
 	void	SetResouceBarrier(ID3D12Resource* Resouce, D3D12_RESOURCE_STATES Before, D3D12_RESOURCE_STATES After);
 	void	WaitGPU();
 	bool	CreateTexture();
