@@ -70,6 +70,7 @@ public:
 	bool	PolygonInit()				override final;
 	bool	CubeInit()					override final;
 	void	ObjectDraw()				override final;
+	void	ObjectUpdate()				override final;
 	void	SetResouceBarrier(ID3D12Resource* Resouce, D3D12_RESOURCE_STATES Before, D3D12_RESOURCE_STATES After);
 	void	WaitGPU();
 	bool	CreateTexture();

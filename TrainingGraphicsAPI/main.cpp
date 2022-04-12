@@ -29,11 +29,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
-	#if defined(DEBUG) || defined(_DEBUG)
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#if defined(DEBUG) || defined(_DEBUG)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	//DirectX11Wrapper Directx;
-	DirectX12Wrapper Directx;
+	//DirectX11Wrapper Dx;
+	DirectX12Wrapper Dx;
 
 	HWND			hwnd;								// ウインドウハンドル
 	MSG				msg;								// メッセージ構造体
@@ -73,7 +73,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	SetTimer(hwnd, TIMER_ID, FREAM_RATE, NULL);
 
 	// DirectxX12の初期化
-	if (FAILED(Directx.Create(hwnd, rc)))
+	if (FAILED(Dx.Create(hwnd, rc)))
 	{
 		return 0;
 	}
@@ -83,11 +83,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	XMFLOAT3 UpVector = { 0.0f, 1.0f, 0.0f };
 
 	// カメラ初期化
-	Camera::GetInstance().Init(SCREEN_WIDTH,SCREEN_HEIGHT, EyePos, TargetPos, UpVector, 1.0f, 100.0f);
-	auto aa=Camera::GetInstance().GetProjMatrix();
+	Camera::GetInstance().Init(SCREEN_WIDTH, SCREEN_HEIGHT, EyePos, TargetPos, UpVector, 1.0f, 100.0f);
+	auto aa = Camera::GetInstance().GetProjMatrix();
 
-	//Directx.PolygonInit();
-	Directx.CubeInit();
+	//Dx.PolygonInit();
+	Dx.CubeInit();
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
@@ -108,16 +108,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
 				Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
 				Camera::GetInstance().Update();
+				Dx.ObjectUpdate();
 
 				// DirectX 描画前処理
-				Directx.BeforeRender();
-
+				Dx.BeforeRender();
 
 				// オブジェクト描画
-				Directx.ObjectDraw();
+				Dx.ObjectDraw();
 
 				// DirectX 描画後処理
-				Directx.AfterRender();
+				Dx.AfterRender();
 			}
 		}
 		else
@@ -127,7 +127,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	}
 
 	// DirectX1終了処理
-	Directx.Release();
+	Dx.Release();
 
 	// タイマー開放
 	KillTimer(hwnd, TIMER_ID);

@@ -279,14 +279,17 @@ void DirectX12Wrapper::ObjectDraw()
 	m_CmdList->DrawIndexedInstanced(m_IndexNum, 1, 0, 0, 0);
 }
 
+void DirectX12Wrapper::ObjectUpdate()
+{
+	m_RotateAngle += 0.025f;
+	XMStoreFloat4x4(&m_CBView[m_FrameIndex].pBuffer->world, DirectX::XMMatrixRotationX(m_RotateAngle));
+	m_CBView[m_FrameIndex].pBuffer->view = Camera::GetInstance().GetViewMatrix();
+	m_CBView[m_FrameIndex].pBuffer->projection = Camera::GetInstance().GetProjMatrix();
+}
+
 // 描画前処理
 void DirectX12Wrapper::BeforeRender()
 {
-	// 更新処理
-	{
-		//m_RotateAngle += 0.025f;
-		//XMStoreFloat4x4(&m_CBView[m_FrameIndex].pBuffer->world, DirectX::XMMatrixRotationX(m_RotateAngle));
-	}
 	// コマンド入力開始
 	m_CmdAllocator[m_FrameIndex]->Reset();
 	m_CmdList->Reset(m_CmdAllocator[m_FrameIndex].Get(), nullptr);

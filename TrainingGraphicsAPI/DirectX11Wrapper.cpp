@@ -184,25 +184,6 @@ void DirectX11Wrapper::Release()
 // 描画前処理
 void DirectX11Wrapper::BeforeRender()
 {
-	static float Angle = 0;
-	Angle++;
-	if (Angle >= 360)Angle = 0;
-
-	// ワールド座標変換
-	XMMATRIX worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f) /** XMMatrixRotationX(Angle * (3.141593 / 180))*/;
-
-	// 各変換行列セット
-	ConstantBuffer cb;
-	XMStoreFloat4x4(&cb.world, worldMatrix);
-	cb.view = Camera::GetInstance().GetViewMatrix();
-	cb.projection = Camera::GetInstance().GetProjMatrix();
-
-	// ライト
-	XMVECTOR Light = XMVector3Normalize(XMVectorSet(0.0f, 0.5f, -1.0f, 0.0f));
-	XMStoreFloat4(&cb.LightDir, Light);
-
-	m_ImmediateContext->UpdateSubresource(m_ConstantBuffer.Get(), 0, NULL, &cb, 0, 0);
-
 	// 画面リセット
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_ImmediateContext->ClearRenderTargetView(m_RenderTargetView.Get(), clearColor);
@@ -363,6 +344,28 @@ void DirectX11Wrapper::ObjectDraw()
 	m_ImmediateContext->PSSetSamplers(0, 1, m_SamplerState.GetAddressOf());
 
 	m_ImmediateContext->DrawIndexed(m_IndexNum, 0, 0);
+}
+
+void DirectX11Wrapper::ObjectUpdate()
+{
+	static float Angle = 0;
+	Angle++;
+	if (Angle >= 360)Angle = 0;
+
+	// ワールド座標変換
+	XMMATRIX worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f) /** XMMatrixRotationX(Angle * (3.141593 / 180))*/;
+
+	// 各変換行列セット
+	ConstantBuffer cb;
+	XMStoreFloat4x4(&cb.world, worldMatrix);
+	cb.view = Camera::GetInstance().GetViewMatrix();
+	cb.projection = Camera::GetInstance().GetProjMatrix();
+
+	// ライト
+	XMVECTOR Light = XMVector3Normalize(XMVectorSet(0.0f, 0.5f, -1.0f, 0.0f));
+	XMStoreFloat4(&cb.LightDir, Light);
+
+	m_ImmediateContext->UpdateSubresource(m_ConstantBuffer.Get(), 0, NULL, &cb, 0, 0);
 }
 
 // キューブ初期化

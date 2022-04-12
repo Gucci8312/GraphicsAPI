@@ -43,6 +43,6 @@ public:
 	virtual bool	PolygonInit() = 0;
 	virtual bool	CubeInit() = 0;
 	virtual void	ObjectDraw() = 0;
-
+	virtual void	ObjectUpdate() = 0;
 };
 

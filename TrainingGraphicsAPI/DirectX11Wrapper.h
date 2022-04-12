@@ -37,5 +37,6 @@ public:
 	bool	PolygonInit()				override final;
 	bool	CubeInit()					override final;
 	void	ObjectDraw()				override final;
+	void	ObjectUpdate()				override final;
 	bool	CreateTexture();
 };
