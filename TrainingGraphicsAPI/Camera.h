@@ -65,9 +65,9 @@ public:
 	}
 
 	XMFLOAT4X4 GetViewMatrix()
-	{
+	{		
 		XMFLOAT4X4 ReturnMat;
-		XMStoreFloat4x4(&ReturnMat, m_ViewMat);
+		XMStoreFloat4x4(&ReturnMat, DirectX::XMMatrixLookAtRH(m_EyePos, m_TargetPos, m_UpVector));
 		return ReturnMat;
 	}
 
