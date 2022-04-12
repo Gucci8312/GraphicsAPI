@@ -2,16 +2,16 @@
 
 VS_OUT main( VS_IN input )
 {
-    VS_OUT output = (VS_OUT) 0;
+    VS_OUT Output = (VS_OUT) 0;
 
-    float4 localPos = input.pos;
+    float4 localPos = input.Pos;
     float4 worldPos = mul( World, localPos );
     float4 viewPos  = mul( View,  worldPos );
     float4 projPos  = mul(Projection,  viewPos );
 
-    output.pos = projPos;
-    output.col    = input.col;
-    output.tex = input.tex;
+    Output.Pos = projPos;
+    Output.Col = input.Col;
+    Output.Tex = input.Tex;
 
-    return output;
+    return Output;
 }
