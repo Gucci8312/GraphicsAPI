@@ -5,6 +5,8 @@
 #include <Directxmath.h>
 #include <locale.h>
 
+#include "Camera.h"
+
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"d3dcompiler.lib")
 
@@ -15,7 +17,7 @@ using namespace DirectX;
 using namespace Microsoft::WRL;
 
 
-struct alignas(256)  Vertex {
+struct Vertex {
 	float pos[3];
 	float col[4];
 	float nor[3];

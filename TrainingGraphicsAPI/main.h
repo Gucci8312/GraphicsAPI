@@ -4,6 +4,7 @@
 
 #include "Application.h"
 #include "DirectX11Wrapper.h"
+#include "Camera.h"
 
 #define		NAME			"APIPractice"
 #define		TITLE			"Renderer"

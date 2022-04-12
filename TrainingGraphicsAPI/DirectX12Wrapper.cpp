@@ -98,7 +98,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 
 
 	auto handle = m_HeapRTV->GetCPUDescriptorHandleForHeapStart();
-	auto incrementSize = m_Device
+	auto IncrementSize = m_Device
 		->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	for (auto i = 0u; i < FrameCount; ++i)
@@ -117,7 +117,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 		m_Device->CreateRenderTargetView(m_ColorBuffer[i].Get(), &viewDesc, handle);
 
 		m_HandleRTV[i] = handle;
-		handle.ptr += incrementSize;
+		handle.ptr += IncrementSize;
 	}
 
 	// フェンスカウンターリセット
@@ -201,7 +201,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	if (FAILED(hr)) return hr;
 
 	handle = m_HeapDSV->GetCPUDescriptorHandleForHeapStart();
-	incrementSize = m_Device
+	IncrementSize = m_Device
 		->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC DepthViewDesc = {};
@@ -239,49 +239,16 @@ void DirectX12Wrapper::Release()
 		CloseHandle(m_FenceEvent);
 		m_FenceEvent = nullptr;
 	}
-}
 
-void DirectX12Wrapper::WaitGPU()
-{
-	assert(m_CmdQueue != nullptr);
-	assert(m_Fence != nullptr);
-	assert(m_FenceEvent != nullptr);
-
-	// シグナル処理.
-	m_CmdQueue->Signal(m_Fence.Get(), m_FenceCounter[m_FrameIndex]);
-
-	// 完了時にイベントを設定する..
-	m_Fence->SetEventOnCompletion(m_FenceCounter[m_FrameIndex], m_FenceEvent);
-
-	// 待機処理.
-	WaitForSingleObjectEx(m_FenceEvent, INFINITE, FALSE);
-
-	// カウンターを増やす.
-	m_FenceCounter[m_FrameIndex]++;
 }
 
 // 描画前処理
-void DirectX12Wrapper::ObjectDraw()
-{
-	m_CmdList->SetGraphicsRootSignature(m_RootSignature.Get());
-	m_CmdList->SetDescriptorHeaps(1, m_BasicDescHeap.GetAddressOf());
-	m_CmdList->SetGraphicsRootConstantBufferView(0, m_CBView[m_FrameIndex].Desc.BufferLocation);
-	m_CmdList->SetGraphicsRootDescriptorTable(1, m_Texture.HandleGPU);
-	m_CmdList->SetPipelineState(m_PSO.Get());
-
-	m_CmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_CmdList->IASetVertexBuffers(0, 1, &m_VBView);
-	m_CmdList->IASetIndexBuffer(&m_IBView);
-
-	m_CmdList->DrawIndexedInstanced(m_IndexNum, 1, 0, 0, 0);
-}
-
 void DirectX12Wrapper::BeforeRender()
 {
 	// 更新処理
 	{
-		m_RotateAngle += 0.025f;
-		XMStoreFloat4x4(&m_CBView[m_FrameIndex].pBuffer->world,DirectX::XMMatrixRotationX(m_RotateAngle));
+		//m_RotateAngle += 0.025f;
+		//XMStoreFloat4x4(&m_CBView[m_FrameIndex].pBuffer->world, DirectX::XMMatrixRotationX(m_RotateAngle));
 	}
 	// コマンド入力開始
 	m_CmdAllocator[m_FrameIndex]->Reset();
@@ -307,8 +274,10 @@ void DirectX12Wrapper::BeforeRender()
 
 }
 
+// 描画後処理
 void DirectX12Wrapper::AfterRender()
 {
+	// リソースバリア
 	SetResouceBarrier(m_ColorBuffer[m_FrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 	// コマンドの記録を終了
@@ -317,7 +286,6 @@ void DirectX12Wrapper::AfterRender()
 	// コマンドを実行
 	ID3D12CommandList* ppCmdLists[] = { m_CmdList.Get() };
 	m_CmdQueue->ExecuteCommandLists(1, ppCmdLists);
-
 
 	// 画面に表示
 	m_SwapChain->Present(1, 0);
@@ -340,6 +308,26 @@ void DirectX12Wrapper::AfterRender()
 	m_FenceCounter[m_FrameIndex] = currentValue + 1;
 }
 
+// フェンス処理
+void DirectX12Wrapper::WaitGPU()
+{
+	assert(m_CmdQueue != nullptr);
+	assert(m_Fence != nullptr);
+	assert(m_FenceEvent != nullptr);
+
+	// シグナル
+	m_CmdQueue->Signal(m_Fence.Get(), m_FenceCounter[m_FrameIndex]);
+
+	// 完了時にイベント設定
+	m_Fence->SetEventOnCompletion(m_FenceCounter[m_FrameIndex], m_FenceEvent);
+
+	// 待機処理
+	WaitForSingleObjectEx(m_FenceEvent, INFINITE, FALSE);
+
+	// カウンター増加
+	m_FenceCounter[m_FrameIndex]++;
+}
+
 // リソースバリア
 void DirectX12Wrapper::SetResouceBarrier(ID3D12Resource* Resouce, D3D12_RESOURCE_STATES Before, D3D12_RESOURCE_STATES After)
 {
@@ -356,15 +344,31 @@ void DirectX12Wrapper::SetResouceBarrier(ID3D12Resource* Resouce, D3D12_RESOURCE
 	m_CmdList->ResourceBarrier(1, &BarrierDesc);
 }
 
+// 描画前処理
+void DirectX12Wrapper::ObjectDraw()
+{
+	m_CmdList->SetGraphicsRootSignature(m_RootSignature.Get());
+	m_CmdList->SetDescriptorHeaps(1, m_BasicDescHeap.GetAddressOf());
+	m_CmdList->SetGraphicsRootConstantBufferView(0, m_CBView[m_FrameIndex].Desc.BufferLocation);
+	m_CmdList->SetGraphicsRootDescriptorTable(1, m_Texture.HandleGPU);
+	m_CmdList->SetPipelineState(m_PSO.Get());
 
+	m_CmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_CmdList->IASetVertexBuffers(0, 1, &m_VBView);
+	m_CmdList->IASetIndexBuffer(&m_IBView);
+
+	m_CmdList->DrawIndexedInstanced(m_IndexNum, 1, 0, 0, 0);
+}
+
+// ポリゴン初期化
 bool DirectX12Wrapper::PolygonInit()
 {
 	// 頂点データ
 	Vertex VertexList[]{
-		{ { -0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,0.0f}},
-		{ {  0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,0.0f}},
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,1.0f}},
-		{ {  0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,1.0f}}
+		{ { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,0.0f}},
+		{ { -0.5f,  0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,0.0f}},
+		{ {  0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,1.0f}},
+		{ {  0.5f,  0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,1.0f}},
 	};
 
 
@@ -414,8 +418,7 @@ bool DirectX12Wrapper::PolygonInit()
 	// インデックスリスト
 	uint32_t Indices[] =
 	{
-		0, 1, 2,
-		0, 3, 1,
+		 0,  1,  2,   3,  2,  1,	
 	};
 
 	m_IndexNum = ARRAYSIZE(Indices);
@@ -486,7 +489,7 @@ bool DirectX12Wrapper::PolygonInit()
 	D3D12_RESOURCE_DESC CBResDesc = {};
 	CBResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	CBResDesc.Alignment = 0;
-	CBResDesc.Width = sizeof(ConstantBuffer);
+	CBResDesc.Width = (sizeof(ConstantBuffer) + 0xff) & ~0xff;
 	CBResDesc.Height = 1;
 	CBResDesc.DepthOrArraySize = 1;
 	CBResDesc.MipLevels = 1;
@@ -517,7 +520,7 @@ bool DirectX12Wrapper::PolygonInit()
 		m_CBView[Idx].HandleCPU = HandleCPU;
 		m_CBView[Idx].HandleGPU = HandleGPU;
 		m_CBView[Idx].Desc.BufferLocation = Address;
-		m_CBView[Idx].Desc.SizeInBytes = sizeof(ConstantBuffer);
+		m_CBView[Idx].Desc.SizeInBytes = (sizeof(ConstantBuffer) + 0xff) & ~0xff;
 
 		// 定数バッファビュー生成
 		m_Device->CreateConstantBufferView(&m_CBView[Idx].Desc, HandleCPU);
@@ -529,17 +532,10 @@ bool DirectX12Wrapper::PolygonInit()
 			return false;
 		}
 
-		auto eyePos = DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f);
-		auto targetPos = DirectX::XMVectorZero();
-		auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-		constexpr auto fovY = DirectX::XMConvertToRadians(37.5f);
-		auto aspect = static_cast<float>(1200) / static_cast<float>(800);
-
 		// 変換行列の設定.
 		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->world ,DirectX::XMMatrixIdentity());
-		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->view , DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward));
-		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->projection , DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 1000.0f));
+		m_CBView[Idx].pBuffer->view = Camera::GetInstance().GetViewMatrix();
+		m_CBView[Idx].pBuffer->projection = Camera::GetInstance().GetProjMatrix();
 	}
 
 	auto flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -638,7 +634,7 @@ bool DirectX12Wrapper::PolygonInit()
 	ComPtr<ID3DBlob> PSBlob;
 
 	// 頂点シェーダー読み込み
-	if (!CompileShader("Shader/SimpleVS.hlsl", "main", "vs_5_0", VSBlob.ReleaseAndGetAddressOf()))
+	if (!CompileShader("Shader/BasicVS.hlsl", "main", "vs_5_0", VSBlob.ReleaseAndGetAddressOf()))
 	{
 		return false;
 	}
@@ -693,6 +689,7 @@ bool DirectX12Wrapper::PolygonInit()
 	return true;
 }
 
+// 立方体初期化
 bool DirectX12Wrapper::CubeInit()
 {
 	// 頂点データ
@@ -734,14 +731,13 @@ bool DirectX12Wrapper::CubeInit()
 		{ {  0.5f,  -0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,0.0f}},
 		{ { -0.5f,  -0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,1.0f}},
 		{ {  0.5f,  -0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,1.0f}},
-
 	};
 
 	// インデックスリスト
 	uint32_t Indices[] =
 	{
 		 0,  1,  2,   3,  2,  1,	// 前面
-		 6,  5,  4,   5,  6,  7,    // 後面
+		 5,  6,  7,   6,  5,  4,    // 後面
 		 8,  9,  10,  11, 10, 9,	// 右面
 		12,  13, 14,  15, 14, 13,	// 左面
 		16,  17, 18,  19, 18, 17,	// 上面
@@ -872,7 +868,7 @@ bool DirectX12Wrapper::CubeInit()
 	CBResDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 	// インクリメント用サイズ取得
-	auto incrementSize = m_Device
+	auto IncrementSize = m_Device
 		->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	for (auto Idx = 0; Idx < FrameCount; ++Idx)
@@ -885,8 +881,8 @@ bool DirectX12Wrapper::CubeInit()
 		auto HandleCPU = m_BasicDescHeap->GetCPUDescriptorHandleForHeapStart();
 		auto HandleGPU = m_BasicDescHeap->GetGPUDescriptorHandleForHeapStart();
 
-		HandleCPU.ptr += incrementSize * Idx;
-		HandleGPU.ptr += incrementSize * Idx;
+		HandleCPU.ptr += IncrementSize * Idx;
+		HandleGPU.ptr += IncrementSize * Idx;
 
 		// 定数バッファビュー設定
 		m_CBView[Idx].HandleCPU = HandleCPU;
@@ -904,17 +900,11 @@ bool DirectX12Wrapper::CubeInit()
 			return false;
 		}
 
-		auto eyePos = DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f);
-		auto targetPos = DirectX::XMVectorZero();
-		auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-		constexpr auto fovY = DirectX::XMConvertToRadians(37.5f);
-		auto aspect = static_cast<float>(1200) / static_cast<float>(800);
 
 		// 変換行列の設定.
 		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->world , DirectX::XMMatrixIdentity());
-		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->view , DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward));
-		XMStoreFloat4x4(&m_CBView[Idx].pBuffer->projection , DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 1000.0f));
+		m_CBView[Idx].pBuffer->view = Camera::GetInstance().GetViewMatrix();
+		m_CBView[Idx].pBuffer->projection = Camera::GetInstance().GetProjMatrix();
 	}
 
 	auto flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -1067,7 +1057,6 @@ bool DirectX12Wrapper::CubeInit()
 
 	return true;
 }
-
 
 // テクスチャ生成
 bool DirectX12Wrapper::CreateTexture()

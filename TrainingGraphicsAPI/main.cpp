@@ -21,11 +21,11 @@
 //}
 //
 
+XMFLOAT3 CameraPos = { 0.0f, 0.0f, 5.0f };
 #define TIMER_ID 1
 #define FREAM_RATE (1000 / 60)
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
@@ -58,14 +58,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	wcex.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 
 	// ウインドウクラスの登録
-	if (!RegisterClassEx(&wcex)) return FALSE;
+	if (!RegisterClassEx(&wcex)) return false;
 
 
 	RECT rc = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
 	hwnd = CreateWindow(NAME, TITLE, WS_CAPTION | WS_SYSMENU, 0,
 		0, rc.right - rc.left, rc.bottom - rc.top, HWND_DESKTOP, (HMENU)NULL, hInstance, (LPVOID)NULL);
 
-	if (!hwnd) return FALSE;
+	if (!hwnd) return false;
 
 	timeBefore = (DWORD)GetTickCount64();
 
@@ -78,8 +78,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 		return 0;
 	}
 
-	//Directx.PolygonInit();
-	Directx.CubeInit();
+	XMFLOAT3 EyePos = { 0.0f, 0.0f, 5.0f };
+	XMFLOAT3 TargetPos = { 0.0f, 0.0f, 0.0f };
+	XMFLOAT3 UpVector = { 0.0f, 1.0f, 5.0f };
+
+	// カメラ初期化
+	Camera::GetInstance().Init(SCREEN_WIDTH,SCREEN_HEIGHT, EyePos, TargetPos, UpVector, 1.0f, 1000.0f);
+	auto aa=Camera::GetInstance().GetProjMatrix();
+
+	Directx.PolygonInit();
+	//Directx.CubeInit();
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
@@ -98,14 +106,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 
+				Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
+				Camera::GetInstance().Update();
+
 				// DirectX 描画前処理
 				Directx.BeforeRender();
 
-				//Directx.CubeUpdate();
 
 				// オブジェクト描画
 				Directx.ObjectDraw();
-				//Directx.Render();
 
 				// DirectX 描画後処理
 				Directx.AfterRender();
@@ -136,6 +145,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case VK_ESCAPE:
 			DestroyWindow(hwnd);
+			break;
+		case VK_RIGHT:
+			CameraPos.x += 0.1f;
+			break;
+		case VK_LEFT:
+			CameraPos.x -= 0.1f;
+			break;
+		case VK_UP:
+			CameraPos.y -= 0.1f;
+			break;
+		case VK_DOWN:
+			CameraPos.y += 0.1f;
+			break;
+		case VK_F1:
+			CameraPos.z += 0.1f;
+			break;
+		case VK_F2:
+			CameraPos.z -= 0.1f;
 			break;
 		}
 		break;

@@ -25,6 +25,7 @@ private:
 	D3D11_VIEWPORT						m_ViewPort = {};
 	ComPtr<ID3D11ShaderResourceView>	NoiseTextureResouce;
 	ComPtr<ID3D11SamplerState>			m_SamplerState;
+	ComPtr<ID3D11RasterizerState>		m_RasterState;
 	int									IndexNum=0;
 
 public:
@@ -35,6 +36,5 @@ public:
 	bool	PolygonInit() override final;
 	bool	CubeInit() override final;
 	void	ObjectDraw() override final;
-	void	ObjectUpdate();
 	bool	CreateTexture();
 };

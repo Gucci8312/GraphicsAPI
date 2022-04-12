@@ -135,6 +135,8 @@ bool Application::Initialize()
 		}
 	}
 
+	//FreeConsole();
+
 	switch (ChoiceIdx)
 	{
 

@@ -65,7 +65,6 @@ HRESULT DirectX11Wrapper::Create(HWND hwnd, RECT rc)
 		return E_FAIL;
 	}
 
-#pragma region DirectX11Init
 	UINT cdev_flags = 0;
 #ifdef _DEBUG
 	cdev_flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -146,6 +145,23 @@ HRESULT DirectX11Wrapper::Create(HWND hwnd, RECT rc)
 		return E_FAIL;
 	}
 
+	// ラスタライザー設定
+	D3D11_RASTERIZER_DESC RasterDesc;
+	RasterDesc.AntialiasedLineEnable = false;
+	RasterDesc.CullMode = D3D11_CULL_BACK;
+	RasterDesc.DepthBias = 0;
+	RasterDesc.DepthBiasClamp = 0.0f;
+	RasterDesc.DepthClipEnable = true;
+	RasterDesc.FillMode = D3D11_FILL_SOLID;
+	RasterDesc.FrontCounterClockwise = false;
+	RasterDesc.MultisampleEnable = false;
+	RasterDesc.ScissorEnable = false;
+	RasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	// ラスタライザー生成
+	hr = m_Device->CreateRasterizerState(&RasterDesc, m_RasterState.ReleaseAndGetAddressOf());
+	if (FAILED(hr)) return hr;
+
 	// ビューポート設定
 	m_ViewPort.Width = static_cast<FLOAT>(rc.right - rc.left);
 	m_ViewPort.Height = static_cast<FLOAT>(rc.bottom - rc.top);
@@ -153,26 +169,59 @@ HRESULT DirectX11Wrapper::Create(HWND hwnd, RECT rc)
 	m_ViewPort.MaxDepth = 1.0f;
 	m_ViewPort.TopLeftX = 0;
 	m_ViewPort.TopLeftY = 0;
-#pragma endregion
 
 	CreateTexture();
 
 	return S_OK;
 }
 
-
 void DirectX11Wrapper::Release()
 {
 }
 
-// ポリゴンの初期化
+// 描画前処理
+void DirectX11Wrapper::BeforeRender()
+{
+	static float Angle = 0;
+	Angle++;
+	if (Angle >= 360)Angle = 0;
+
+	// ワールド座標変換
+	XMMATRIX worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f)/**XMMatrixRotationX(Angle*(3.141593/180))*/;
+
+	// 各変換行列セット
+	ConstantBuffer cb;
+	XMStoreFloat4x4(&cb.world, XMMatrixTranspose(worldMatrix));
+	cb.view = Camera::GetInstance().GetViewMatrix();
+	cb.projection = Camera::GetInstance().GetProjMatrix();
+
+	// ライト
+	XMVECTOR Light = XMVector3Normalize(XMVectorSet(0.0f, 0.5f, -1.0f, 0.0f));
+	XMStoreFloat4(&cb.LightDir, Light);
+
+	m_ImmediateContext->UpdateSubresource(m_ConstantBuffer.Get(), 0, NULL, &cb, 0, 0);
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	m_ImmediateContext->ClearRenderTargetView(m_RenderTargetView.Get(), clearColor);
+	m_ImmediateContext->RSSetViewports(1, &m_ViewPort);
+	m_ImmediateContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_ImmediateContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get());
+	m_ImmediateContext->RSSetState(m_RasterState.Get());
+}
+
+// 描画後処理
+void DirectX11Wrapper::AfterRender()
+{
+	m_SwapChain->Present(0, 0);
+}
+
+// ポリゴン初期化
 bool DirectX11Wrapper::PolygonInit()
 {
 	Vertex VertexList[]{
-		{ { -0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,0.0f}},
-		{ {  0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,0.0f}},
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,1.0f}},
-		{ {  0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,1.0f}}
+		{ { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,0.0f}},
+		{ { -0.5f,  0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,0.0f}},
+		{ {  0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,1.0f}},
+		{ {  0.5f,  0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,1.0f}},
 	};
 
 	//頂点バッファ作成
@@ -196,8 +245,7 @@ bool DirectX11Wrapper::PolygonInit()
 	}
 
 	WORD IndexList[]{
-		0, 1, 2,
-		0, 3, 1,
+		 0,  1,  2,   3,  2,  1,
 	};
 
 	IndexNum = _countof(IndexList);
@@ -222,7 +270,7 @@ bool DirectX11Wrapper::PolygonInit()
 
 	// 頂点シェーダコンパイル
 	ComPtr<ID3DBlob> vsblob;
-	CompileShader("Shader/BasicVS.hlsl", "main", "vs_5_0", vsblob.ReleaseAndGetAddressOf());
+	CompileShader("Shader/SimpleVS.hlsl", "main", "vs_5_0", vsblob.ReleaseAndGetAddressOf());
 
 	// 頂点シェーダー作成
 	if (FAILED(m_Device->CreateVertexShader(vsblob->GetBufferPointer(), vsblob->GetBufferSize(), NULL, m_VertexShader.ReleaseAndGetAddressOf())))
@@ -257,7 +305,7 @@ bool DirectX11Wrapper::PolygonInit()
 
 	//定数バッファ設定
 	D3D11_BUFFER_DESC cbDesc;
-	cbDesc.ByteWidth = (sizeof(ConstantBuffer)+0xff)&~0xff;
+	cbDesc.ByteWidth = (sizeof(ConstantBuffer) + 0xff) & ~0xff;
 	//cbDesc.ByteWidth = sizeof(ConstantBuffer);
 	cbDesc.Usage = D3D11_USAGE_DEFAULT;
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -292,6 +340,8 @@ bool DirectX11Wrapper::PolygonInit()
 	XMStoreFloat4x4(&cb.world, XMMatrixTranspose(worldMatrix));
 	XMStoreFloat4x4(&cb.view, XMMatrixTranspose(viewMatrix));
 	XMStoreFloat4x4(&cb.projection, XMMatrixTranspose(projMatrix));
+	//cb.view = Camera::GetInstance().GetViewMatrix();
+	//cb.projection = Camera::GetInstance().GetProjMatrix();
 
 	// ライト
 	XMVECTOR Light = XMVector3Normalize(XMVectorSet(0.0f, 0.5f, -1.0f, 0.0f));
@@ -302,7 +352,7 @@ bool DirectX11Wrapper::PolygonInit()
 	return true;
 }
 
-
+// オブジェクト描画
 void DirectX11Wrapper::ObjectDraw()
 {
 	UINT strides = sizeof(Vertex);
@@ -321,52 +371,62 @@ void DirectX11Wrapper::ObjectDraw()
 	m_ImmediateContext->DrawIndexed(IndexNum, 0, 0);
 }
 
+// 立方体初期化
 bool DirectX11Wrapper::CubeInit()
 {
-	Vertex VertexList[]{
-	{ { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,0.0f}},
-	{ {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,0.0f}},
-	{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,1.0f}},
-	{ {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,1.0f}},
+	// 頂点リスト
+	Vertex VertexList[]
+	{
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,0.0f}},
+		{ { -0.5f,  0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,0.0f}},
+		{ {  0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {1.0f,1.0f}},
+		{ {  0.5f,  0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f, 1.0f } ,{  0.0f,  0.0f, -1.0f }, {0.0f,1.0f}},
 
-	{ { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,0.0f}},
-	{ { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,0.0f}},
-	{ {  0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,1.0f}},
-	{ {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,1.0f}},
+		// 後面
+		{ { -0.5f, -0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,0.0f}},
+		{ { -0.5f,  0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,0.0f}},
+		{ {  0.5f, -0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {0.0f,1.0f}},
+		{ {  0.5f,  0.5f,  -0.5f }, { 0.0f, 1.0f, 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {1.0f,1.0f}},
 
-	{ { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {0.0f,0.0f}},
-	{ { -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {1.0f,0.0f}},
-	{ { -0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {0.0f,1.0f}},
-	{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {1.0f,1.0f}},
+		// 右面
+		{ { 0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {0.0f,0.0f}},
+		{ { 0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {1.0f,0.0f}},
+		{ { 0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {0.0f,1.0f}},
+		{ { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {1.0f,1.0f}},
 
-	{ {  0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {0.0f,0.0f}},
-	{ {  0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {1.0f,0.0f}},
-	{ {  0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {0.0f,1.0f}},
-	{ {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {1.0f,1.0f}},
+		// 左面
+		{ {  -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {0.0f,0.0f}},
+		{ {  -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {1.0f,0.0f}},
+		{ {  -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {0.0f,1.0f}},
+		{ {  -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f } , {1.0f,1.0f}},
 
-	{ { -0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,0.0f}},
-	{ {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,0.0f}},
-	{ { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,1.0f}},
-	{ {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,1.0f}},
 
-	{ { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {0.0f,0.0f}},
-	{ { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {1.0f,0.0f}},
-	{ {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {0.0f,1.0f}},
-	{ {  0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {1.0f,1.0f}},
+		// 上面
+		{ { -0.5f, 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {0.0f,0.0f}},
+		{ { -0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {1.0f,0.0f}},
+		{ {  0.5f, 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {0.0f,1.0f}},
+		{ {  0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f, 1.0f }, {  0.0f, -1.0f,  0.0f } , {1.0f,1.0f}},
+
+		// 下面
+		{ { -0.5f,  -0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,0.0f}},
+		{ {  0.5f,  -0.5f,  0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,0.0f}},
+		{ { -0.5f,  -0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {0.0f,1.0f}},
+		{ {  0.5f,  -0.5f, -0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f }, {  0.0f,  1.0f,  0.0f }  , {1.0f,1.0f}},
 	};
 
+	// インデックスリスト
 	WORD IndexList[]{
-		 0,  1,  2,     3,  2,  1,
-		 4,  5,  6,     7,  6,  5,
-		 8,  9, 10,    11, 10,  9,
-		12, 13, 14,    15, 14, 13,
-		16, 17, 18,    19, 18, 17,
-		20, 21, 22,    23, 22, 21,
+		 0,  1,  2,   3,  2,  1,	// 前面
+		 5,  6,  7,   6,  5,  4,    // 後面
+		 8,  9,  10,  11, 10, 9,	// 右面
+		12,  13, 14,  15, 14, 13,	// 左面
+		16,  17, 18,  19, 18, 17,	// 上面
+		20,  21, 22,  23, 22, 21,	// 下面	
 	};
 
 	IndexNum = ARRAYSIZE(IndexList);
 
-	//頂点バッファ作成
+	//頂点バッファ設定
 	D3D11_BUFFER_DESC vbDesc;
 	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(VertexList);
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -375,11 +435,13 @@ bool DirectX11Wrapper::CubeInit()
 	vbDesc.MiscFlags = 0;
 	vbDesc.StructureByteStride = 0;
 
+	// リソース設定
 	D3D11_SUBRESOURCE_DATA vrData;
 	vrData.pSysMem = VertexList;
 	vrData.SysMemPitch = 0;
 	vrData.SysMemSlicePitch = 0;
 
+	// 頂点バッファ生成
 	if (FAILED(m_Device->CreateBuffer(&vbDesc, &vrData, m_VertexBuffer.ReleaseAndGetAddressOf())))
 	{
 		return false;
@@ -420,10 +482,10 @@ bool DirectX11Wrapper::CubeInit()
 	// 頂点データ設定
 	D3D11_INPUT_ELEMENT_DESC VertexDesc[]
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                            0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{"NORMAL" , 0,DXGI_FORMAT_R32G32B32_FLOAT,   0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"TEXCOORD" , 0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{"POSITION" , 0, DXGI_FORMAT_R32G32B32_FLOAT    , 0,                            0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{"COLOR"    , 0, DXGI_FORMAT_R32G32B32A32_FLOAT , 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{"NORMAL"   , 0, DXGI_FORMAT_R32G32B32_FLOAT    , 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{"TEXCOORD" , 0, DXGI_FORMAT_R32G32_FLOAT       , 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	// インプットレイアウト作成
@@ -462,7 +524,7 @@ bool DirectX11Wrapper::CubeInit()
 	XMMATRIX worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
 
 	// ビュー座標
-	XMVECTOR eye = XMVectorSet(2.0f, 2.0f, -2.0f, 0.0f);		// 視点位置
+	XMVECTOR eye = XMVectorSet(0.0f, 0.0f, -2.0f, 0.0f);		// 視点位置
 	XMVECTOR focus = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);		// 注視点
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);			// 上ベクトル
 	XMMATRIX viewMatrix = XMMatrixLookAtLH(eye, focus, up);		// ビュー変換
@@ -489,42 +551,7 @@ bool DirectX11Wrapper::CubeInit()
 	return true;
 }
 
-void DirectX11Wrapper::ObjectUpdate()
-{
-	static float Angle = 0;
-	Angle++;
-	if (Angle >= 360)Angle = 0;
-
-	// ワールド座標変換
-	XMMATRIX worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f) ;
-
-	// ビュー座標
-	XMVECTOR eye = XMVectorSet(2.0f, 2.0f, -2.0f, 0.0f);		// 視点位置
-	XMVECTOR focus = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);		// 注視点
-	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);			// 上ベクトル
-	XMMATRIX viewMatrix = XMMatrixLookAtLH(eye, focus, up);		// ビュー変換
-
-	// プロジェクション変換
-	constexpr float    fov = XMConvertToRadians(45.0f);					// 視野角
-	float    aspect = m_ViewPort.Width / m_ViewPort.Height;		// アスペクト比
-	float    nearZ = 0.1f;										// 近
-	float    farZ = 100.0f;										// 遠
-	XMMATRIX projMatrix = XMMatrixPerspectiveFovLH(fov, aspect, nearZ, farZ);
-
-	// 各変換行列セット
-	ConstantBuffer cb;
-	XMStoreFloat4x4(&cb.world, XMMatrixTranspose(worldMatrix));
-	XMStoreFloat4x4(&cb.view, XMMatrixTranspose(viewMatrix));
-	XMStoreFloat4x4(&cb.projection, XMMatrixTranspose(projMatrix));
-
-	// ライト
-	XMVECTOR Light = XMVector3Normalize(XMVectorSet(0.0f, 0.5f, -1.0f, 0.0f));
-	XMStoreFloat4(&cb.LightDir, Light);
-
-	m_ImmediateContext->UpdateSubresource(m_ConstantBuffer.Get(), 0, NULL, &cb, 0, 0);
-
-}
-
+// テクスチャ生成
 bool DirectX11Wrapper::CreateTexture()
 {
 	const int PixelSize = 32;		// 縦横ピクセル数
@@ -601,21 +628,5 @@ bool DirectX11Wrapper::CreateTexture()
 	}
 
 	return true;
-}
-
-// 描画前処理
-void DirectX11Wrapper::BeforeRender()
-{
-	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	m_ImmediateContext->ClearRenderTargetView(m_RenderTargetView.Get(), clearColor);
-	m_ImmediateContext->RSSetViewports(1, &m_ViewPort);
-	m_ImmediateContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	m_ImmediateContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get());
-}
-
-// 描画後処理
-void DirectX11Wrapper::AfterRender()
-{
-	m_SwapChain->Present(0, 0);
 }
 
