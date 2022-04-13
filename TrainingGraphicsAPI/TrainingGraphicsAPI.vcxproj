@@ -22,19 +22,23 @@
     <ClCompile Include="AllInWrapper.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CreateInterFace.cpp" />
     <ClCompile Include="DirectX11Wrapper.cpp" />
     <ClCompile Include="DirectX12Wrapper.cpp" />
     <ClCompile Include="DirectXAllRapper.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Object.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllInWrapper.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CreateInterFace.h" />
     <ClInclude Include="DirectX11Wrapper.h" />
     <ClInclude Include="DirectX12Wrapper.h" />
     <ClInclude Include="DirectXAllRapper.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="Object.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\SimpleVS.hlsl">

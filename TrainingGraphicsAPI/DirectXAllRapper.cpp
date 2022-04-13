@@ -1,7 +1,7 @@
 #include "DirectXAllRapper.h"
 
 // シェーダーコンパイル
-bool DirectXAllRapper::CompileShader(const char* FileName, const char* EntryPoint, const char* ShaderVer, ID3DBlob** ReturnBlob)
+bool CompileShader(const char* FileName, const char* EntryPoint, const char* ShaderVer, ID3DBlob** ReturnBlob)
 {
 #ifdef _DEBUG
 

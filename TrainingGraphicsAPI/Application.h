@@ -5,6 +5,7 @@
 #include "AllInWrapper.h"
 #include "DirectX11Wrapper.h"
 #include "DirectX12Wrapper.h"
+#include "Object.h"
 
 #define		NAME			"APIPractice"
 #define		TITLE			"Renderer"
@@ -17,6 +18,7 @@ private:
 	HWND        m_hWnd = nullptr;
 	LONG		m_Width;
 	LONG		m_Height;
+	Object		m_Cube;
 
 	void Update();
 	void Render();

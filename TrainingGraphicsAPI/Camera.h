@@ -11,15 +11,16 @@ private:
 	Camera() = default;
 	~Camera() = default;
 
-	float m_Width;
-	float m_Height;
-	float m_Near;
-	float m_Far;
-	XMMATRIX m_ViewMat;
-	XMMATRIX m_ProjMat;
-	XMVECTOR m_EyePos;
-	XMVECTOR m_TargetPos;
-	XMVECTOR m_UpVector;
+	float m_Width = 0;
+	float m_Height = 0;
+	float m_Near = 0;
+	float m_Far = 0;
+	float m_Offset = 10;
+	XMMATRIX m_ViewMat = {};
+	XMMATRIX m_ProjMat = {};
+	XMVECTOR m_EyePos = {};
+	XMVECTOR m_TargetPos = {};
+	XMVECTOR m_UpVector={};
 
 public:
 	Camera(const Camera&) = delete;
@@ -33,11 +34,12 @@ public:
 		static Camera Instance;
 		return Instance;
 	}
-	
+
 	// インスタンス生成
-	bool Init(float Width,float Height, XMFLOAT3 CameraPos, XMFLOAT3 TargetPos, XMFLOAT3 UpVector,float Near,float Far);
+	bool Init(float Width, float Height, XMFLOAT3 CameraPos, XMFLOAT3 TargetPos, XMFLOAT3 UpVector, float Near, float Far);
 
 	void Update();
+	void UpdateSphereCamera(float Radius, float Elevation, float azimuth, const XMFLOAT3& lookat);
 
 	void SetCameraPos(XMVECTOR Pos)
 	{
@@ -53,6 +55,11 @@ public:
 	{
 		m_UpVector = UpVector;
 	}
+	
+	void SetOffset(float Offset)
+	{
+		m_Offset = Offset;
+	}
 
 	void SetNear(float Near)
 	{
@@ -65,7 +72,7 @@ public:
 	}
 
 	XMFLOAT4X4 GetViewMatrix()
-	{		
+	{
 		XMFLOAT4X4 ReturnMat;
 		XMStoreFloat4x4(&ReturnMat, DirectX::XMMatrixLookAtRH(m_EyePos, m_TargetPos, m_UpVector));
 		return ReturnMat;

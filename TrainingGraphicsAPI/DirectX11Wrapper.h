@@ -1,11 +1,5 @@
 #pragma once
-#include <d3d11.h>
-#include <string>
-#include <random>
-
 #include "DirectXAllRapper.h"
-
-#pragma comment(lib,"d3d11.lib")
 
 // DirectX11èâä˙âªÉNÉâÉX
 class DirectX11Wrapper :public DirectXAllRapper
@@ -34,9 +28,9 @@ public:
 	void    Release()					override final;
 	void	BeforeRender()				override final;
 	void	AfterRender()				override final;
-	bool	PolygonInit()				override final;
-	bool	CubeInit()					override final;
-	void	ObjectDraw()				override final;
-	void	ObjectUpdate()				override final;
+	bool	PolygonInit()				;
+	bool	CubeInit()					;
+	void	ObjectDraw()				;
+	void	ObjectUpdate()				;
 	bool	CreateTexture();
 };

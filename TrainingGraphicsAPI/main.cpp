@@ -34,6 +34,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 #endif
 	//DirectX11Wrapper Dx;
 	DirectX12Wrapper Dx;
+	Object object;
 
 	HWND			hwnd;								// ウインドウハンドル
 	MSG				msg;								// メッセージ構造体
@@ -87,8 +88,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	auto aa = Camera::GetInstance().GetProjMatrix();
 
 	//Dx.PolygonInit();
-	Dx.CubeInit();
+	//Dx.CubeInit();
 
+	object.CubeInit(Dx.GetDevice());
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
 
@@ -108,13 +110,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
 				Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
 				Camera::GetInstance().Update();
-				Dx.ObjectUpdate();
-
+				//Dx.ObjectUpdate();
+				object.Update(Dx.GetFrameIndex());
+				object.PosSet(EyePos.x,EyePos.y,EyePos.z);
 				// DirectX 描画前処理
 				Dx.BeforeRender();
 
 				// オブジェクト描画
-				Dx.ObjectDraw();
+				//Dx.ObjectDraw();
+				object.Draw(Dx.GetCmdList(), Dx.GetFrameIndex());
 
 				// DirectX 描画後処理
 				Dx.AfterRender();
@@ -147,22 +151,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			DestroyWindow(hwnd);
 			break;
 		case VK_RIGHT:
-			CameraPos.x += 0.1f;
+			CameraPos.x += 1.0f;
 			break;
 		case VK_LEFT:
-			CameraPos.x -= 0.1f;
+			CameraPos.x -= 1.0f;
 			break;
 		case VK_UP:
-			CameraPos.y -= 0.1f;
+			CameraPos.y -= 1.0f;
 			break;
 		case VK_DOWN:
-			CameraPos.y += 0.1f;
+			CameraPos.y += 1.0f;
 			break;
 		case VK_F1:
-			CameraPos.z += 0.1f;
+			CameraPos.z += 1.0f;
 			break;
 		case VK_F2:
-			CameraPos.z -= 0.1f;
+			CameraPos.z -= 1.0f;
 			break;
 		}
 		break;

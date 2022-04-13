@@ -5,7 +5,6 @@
 class AllInWrapper
 {
 protected:
-	bool CompileShader();
 
 private:
 public:
