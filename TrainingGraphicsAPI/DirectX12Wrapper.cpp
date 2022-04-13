@@ -222,18 +222,22 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 // 終了処理
 void DirectX12Wrapper::Release()
 {
-	//for (auto Idx = 0; Idx < m_FrameCount; ++Idx)
-	//{
-	//	if (m_ConstantBuffer[Idx].Get() != nullptr)
-	//	{
-	//		m_ConstantBuffer[Idx]->Unmap(0, nullptr);
-	//		//memset(&m_CBView[Idx], 0, sizeof(m_ConstantBuffer[Idx]));
-	//	}
-	//	//m_ConstantBuffer[Idx].Reset();
-	//}
-
 	// フェンス処理
 	WaitGPU();
+	   m_Device.Reset();
+	   m_CmdQueue.Reset();
+	   m_SwapChain.Reset();
+	   m_CmdList.Reset();
+	   m_HeapRTV.Reset();
+	   m_HeapDSV.Reset();
+	   m_Fence.Reset();
+	   m_DepthBuffer.Reset();
+	   for (auto Idx = 0; Idx < m_FrameCount; ++Idx)
+	   {
+
+		   m_CmdAllocator[Idx].Reset();
+		   m_ColorBuffer[Idx].Reset();
+	   }
 
 	// イベント破棄
 	if (m_FenceEvent != nullptr)

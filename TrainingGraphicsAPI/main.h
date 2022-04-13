@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <iostream>
-
+#include <thread>
 #include "Application.h"
 #include "DirectX11Wrapper.h"
 #include "Object.h"
@@ -14,3 +14,5 @@
 
 #define     DIRECTX11_IDX 0
 #define     DIRECTX12_IDX 1
+
+using namespace std;

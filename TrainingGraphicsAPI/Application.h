@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <cstdint>
+#include <memory>
 
 #include "AllInWrapper.h"
 #include "DirectX11Wrapper.h"
@@ -22,7 +23,7 @@ private:
 
 	void Update();
 	void Render();
-	DirectXAllRapper* ApiWrapper = nullptr;
+	std::unique_ptr<DirectXAllRapper> ApiWrapper = nullptr;
 public:
 	//void (Application::* Process)();
 	bool Initialize();

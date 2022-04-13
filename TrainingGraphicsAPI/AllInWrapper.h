@@ -2,12 +2,14 @@
 #include <Windows.h>  // å„Ç≈è¡Ç∑
 #include <iostream>
 
+
 class AllInWrapper
 {
 protected:
 
 private:
 public:
+	
 	//virtual bool Initialize(HWND hWnd) = 0;
 	//virtual void Update() = 0;
 	//virtual void Render() = 0;

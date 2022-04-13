@@ -59,8 +59,3 @@ public:
 	//virtual void	ObjectUpdate() = 0;
 };
 
-union DxDevice
-{
-	ID3D11Device* Dx11Device;
-	ID3D12Device* Dx12Device;
-};
