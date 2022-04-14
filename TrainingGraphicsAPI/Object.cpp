@@ -519,7 +519,9 @@ void Object::Draw(ID3D12GraphicsCommandList* CmdList, int FrameIndex)
 void Object::Update(int FrameIndex)
 {
 	m_RotateAngle += 0.025f;
-	auto Matrix = XMMatrixRotationY(m_RotateAngle);
+
+	// Šg‘åk¬*‰ñ“]*ˆÚ“®
+	auto Matrix = XMMatrixRotationY(m_RotateAngle)*XMMatrixTranslation(m_Pos.x,m_Pos.y,m_Pos.z);
 	XMStoreFloat4x4(&m_12CBView[FrameIndex].pBuffer->world, Matrix);
 	m_12CBView[FrameIndex].pBuffer->view = Camera::GetInstance().GetViewMatrix();
 	m_12CBView[FrameIndex].pBuffer->projection = Camera::GetInstance().GetProjMatrix();

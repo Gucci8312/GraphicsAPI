@@ -61,11 +61,15 @@ class DirectXAllRapper
 protected:
 	static ComPtr<ID3D11Device> Dx11Device;
 	static ComPtr<ID3D12Device> Dx12Device;
+	static ComPtr<ID3D12GraphicsCommandList>         m_CmdList;
+	static 	uint32_t           m_FrameIndex ;
 public:
 	virtual HRESULT Create(HWND hwnd, RECT rc) = 0;
 	virtual void    Release() = 0;
 	virtual void	BeforeRender() = 0;
 	virtual void	AfterRender() = 0;
 	ID3D12Device* GetDevice() { return Dx12Device.Get(); }
+	ID3D12GraphicsCommandList* GetCmdList() { return m_CmdList.Get(); }
+	uint32_t GetFrameIdx() { return m_FrameIndex; }
 };
 

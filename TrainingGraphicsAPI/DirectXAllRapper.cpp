@@ -2,6 +2,8 @@
 
 ComPtr<ID3D11Device> DirectXAllRapper::Dx11Device;
 ComPtr<ID3D12Device> DirectXAllRapper::Dx12Device;
+uint32_t             DirectXAllRapper::m_FrameIndex;
+ComPtr<ID3D12GraphicsCommandList>    DirectXAllRapper::m_CmdList;
 
 // シェーダーコンパイル
 bool CompileShader(const char* FileName, const char* EntryPoint, const char* ShaderVer, ID3DBlob** ReturnBlob)
@@ -30,10 +32,10 @@ bool CompileShader(const char* FileName, const char* EntryPoint, const char* Sha
 		return false;
 	}
 
-    return true;
+	return true;
 }
 
-HRESULT DirectX11Util::CreateBuffer(ID3D11Device* Device, D3D11_BIND_FLAG Flag, const void* Data,UINT Size, ID3D11Buffer** Buffer)
+HRESULT DirectX11Util::CreateBuffer(ID3D11Device* Device, D3D11_BIND_FLAG Flag, const void* Data, UINT Size, ID3D11Buffer** Buffer)
 {
 	//バッファ作成
 	D3D11_BUFFER_DESC Desc;
@@ -53,7 +55,7 @@ HRESULT DirectX11Util::CreateBuffer(ID3D11Device* Device, D3D11_BIND_FLAG Flag, 
 	return Device->CreateBuffer(&Desc, &ResouceData, Buffer);
 }
 
-HRESULT DirectX11Util::CreateBuffer(ID3D11Device* Device, D3D11_BIND_FLAG Flag,  UINT Size, ID3D11Buffer** Buffer)
+HRESULT DirectX11Util::CreateBuffer(ID3D11Device* Device, D3D11_BIND_FLAG Flag, UINT Size, ID3D11Buffer** Buffer)
 {
 	//バッファ設定
 	D3D11_BUFFER_DESC Desc;
@@ -65,10 +67,10 @@ HRESULT DirectX11Util::CreateBuffer(ID3D11Device* Device, D3D11_BIND_FLAG Flag, 
 	Desc.StructureByteStride = 0;
 
 	// バッファ生成
-	return Device->CreateBuffer(&Desc,NULL, Buffer);
+	return Device->CreateBuffer(&Desc, NULL, Buffer);
 }
 
-HRESULT DirectX12Util::CreateBuffer(ID3D12Device* Device,  UINT Size, ID3D12Resource** Buffer)
+HRESULT DirectX12Util::CreateBuffer(ID3D12Device* Device, UINT Size, ID3D12Resource** Buffer)
 {
 	// 頂点バッファ設定
 	D3D12_HEAP_PROPERTIES Prop = {};

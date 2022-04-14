@@ -1,5 +1,4 @@
 #pragma once
-
 #include "DirectXAllRapper.h"
 
 // DirectX12èâä˙âªÉNÉâÉX
@@ -11,7 +10,7 @@ private:
 	ComPtr<ID3D12CommandQueue>             m_CmdQueue;
 	ComPtr<IDXGISwapChain3>                m_SwapChain;
 	ComPtr<ID3D12CommandAllocator>         m_CmdAllocator[m_FrameCount];
-	ComPtr<ID3D12GraphicsCommandList>      m_CmdList;
+	//ComPtr<ID3D12GraphicsCommandList>      m_CmdList;
 	ComPtr<ID3D12DescriptorHeap>           m_HeapRTV;
 	ComPtr<ID3D12DescriptorHeap>           m_HeapDSV;
 	ComPtr<ID3D12Resource>                 m_ColorBuffer[m_FrameCount];
@@ -19,7 +18,7 @@ private:
 	ComPtr<ID3D12Resource>				   m_DepthBuffer;
 	HANDLE								   m_FenceEvent = {};
 	uint64_t							   m_FenceCounter[m_FrameCount];
-	uint32_t                               m_FrameIndex = 0;
+	//uint32_t                               m_FrameIndex = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE            m_HandleRTV[m_FrameCount];
 	D3D12_CPU_DESCRIPTOR_HANDLE            m_HandleDSV = {};
 	D3D12_VIEWPORT                         m_ViewPort = {};

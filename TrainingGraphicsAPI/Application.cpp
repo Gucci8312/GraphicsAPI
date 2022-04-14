@@ -1,5 +1,10 @@
 #include "Application.h"
 
+XMFLOAT3 CameraPos = { -0.0f,20.0f,60.0f };
+DWORD			timeBefore;
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 // 頂点リスト
 Vertex VertexList[]
 {
@@ -157,9 +162,10 @@ void Application::MainLoop()
 			}
 			else
 			{
-				Update();
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
+
+				Update();
 
 				Render();
 			}
@@ -229,7 +235,7 @@ bool Application::Initialize()
 		break;
 	case 1:													// DirectX12
 		ApiWrapper.reset(new DirectX12Wrapper);
-		Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
+		//Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
 		break;
 	case 2:													// OpenGL 
 		ApiWrapper.reset(new DirectX11Wrapper);
@@ -266,8 +272,17 @@ bool Application::Initialize()
 	//if (FAILED(hr)) return false;
 
 	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList), Dx.GetDeviceContext());
-	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
+	for (int Idx = 0; Idx < 250; Idx++)
+	{
+		Cube[Idx].PosSet(-125.0f+3.0f*Idx,0.0f,0.0f);
+		Cube[Idx].ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
+	}
 	//Cube.QuadInit(Dx.GetDevice());
+
+	timeBefore = (DWORD)GetTickCount64();
+
+	// タイマーセット
+	SetTimer(m_hWnd, TIMER_ID, FREAM_RATE, NULL);
 
 	return true;
 }
@@ -275,9 +290,12 @@ bool Application::Initialize()
 // 更新処理
 void Application::Update()
 {
-	//Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
+	Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
 	Camera::GetInstance().Update();
-	//Cube.Update(Dx.GetFrameIndex());
+	for (int Idx = 0; Idx < 250; Idx++)
+	{
+		Cube[Idx].Update(ApiWrapper->GetFrameIdx());
+	}
 	//Cube.Update(Dx.GetDeviceContext());
 }
 
@@ -289,7 +307,10 @@ void Application::Render()
 		//Dx.BeforeRender();
 		ApiWrapper->BeforeRender();
 
-		//Cube.Draw(Dx.GetCmdList(),Dx.GetFrameIndex());
+		for (int Idx = 0; Idx < 250; Idx++)
+		{
+			Cube[Idx].Draw(ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
+		}
 		//Cube.Draw(Dx.GetDeviceContext());
 
 		//Dx.AfterRender();
@@ -300,21 +321,30 @@ void Application::Render()
 // 終了処理
 void Application::Finalize()
 {
-	//if (ApiWrapper != nullptr)
+	if (ApiWrapper != nullptr)
 	{
 		//Dx.Release();
 		ApiWrapper->Release();
 	}
+	// タイマー開放
+	KillTimer(m_hWnd, TIMER_ID);
 }
 
 // ウィンドウプロシージャ
-LRESULT CALLBACK Application::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+LRESULT WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch (msg)
+	switch (uMsg)
 	{
 	case WM_DESTROY:
 	{
 		PostQuitMessage(0);
+		break;
+	case VK_UP:
+		CameraPos.z += 1.0f;
+		break;
+	case VK_F2:
+		CameraPos.z -= 1.0f;
+		break;
 	}
 	break;
 
@@ -324,5 +354,5 @@ LRESULT CALLBACK Application::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	break;
 	}
 
-	return DefWindowProc(hWnd, msg, wp, lp);
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }

@@ -50,8 +50,8 @@ private:
 
 public:
 	void PosSet(float x, float y, float z) { m_Pos = { x,y,z }; }
-	bool ObjectCreate(ID3D11Device* Device,Vertex* VertexList, int VertexNum, unsigned short* IndexList,int IndexNum, ID3D11DeviceContext* Context);
-	bool ObjectCreate(ID3D12Device* Device,Vertex* VertexList, int VertexNum, uint32_t* IndexList,int IndexNum);
+	bool ObjectCreate(ID3D11Device* Device, Vertex* VertexList, int VertexNum, unsigned short* IndexList, int IndexNum, ID3D11DeviceContext* Context);
+	bool ObjectCreate(ID3D12Device* Device, Vertex* VertexList, int VertexNum, uint32_t* IndexList, int IndexNum);
 	void Draw(ID3D12GraphicsCommandList* CmdList, int FrameIndex);
 	void Draw(ID3D11DeviceContext* CmdList);
 	void Update(int FrameIndex);

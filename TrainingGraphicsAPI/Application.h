@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdint>
 #include <memory>
+#include <thread>
 
 #include "AllInWrapper.h"
 #include "DirectX11Wrapper.h"
@@ -23,11 +24,10 @@ private:
 	LONG		m_Width;
 	LONG		m_Height;
 	Object		m_Cube;
+
 	//DirectX11Wrapper Dx;
 	//DirectX12Wrapper Dx;
 	Object      Quad;
-	Object      Cube;
-	XMFLOAT3 CameraPos = { 0.0f, 0.0f, 5.0f };
 
 	void Update();
 	void Render();
@@ -42,6 +42,5 @@ public:
 	bool InitWnd();
 	void Run();
 	void MainLoop();
-	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 };
 
