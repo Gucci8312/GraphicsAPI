@@ -20,7 +20,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 #endif
 
 	// デバイス生成
-	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf()));
+	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(Dx12Device.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return hr;
 
 	// コマンドキュー設定
@@ -31,7 +31,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	QueueDesc.NodeMask = 0;
 
 	// コマンドキュー生成
-	hr = m_Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf()));
+	hr = Dx12Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return hr;
 
 	// DXGIファクトリ生成
@@ -77,12 +77,12 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	// コマンドアロケータ生成
 	for (auto i = 0; i < m_FrameCount; ++i)
 	{
-		hr = m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocator[i].ReleaseAndGetAddressOf()));
+		hr = Dx12Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocator[i].ReleaseAndGetAddressOf()));
 		if (FAILED(hr)) return hr;
 	}
 
 	// コマンドリスト生成
-	hr = m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocator[m_FrameIndex].Get(),
+	hr = Dx12Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocator[m_FrameIndex].Get(),
 		nullptr, IID_PPV_ARGS(m_CmdList.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return hr;
 
@@ -94,12 +94,12 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	RTVHeapDesc.NodeMask = 0;
 
 	// ディスクリプタヒープ生成
-	hr = m_Device->CreateDescriptorHeap(&RTVHeapDesc, IID_PPV_ARGS(m_HeapRTV.ReleaseAndGetAddressOf()));
+	hr = Dx12Device->CreateDescriptorHeap(&RTVHeapDesc, IID_PPV_ARGS(m_HeapRTV.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))	return hr;
 
 
 	auto handle = m_HeapRTV->GetCPUDescriptorHandleForHeapStart();
-	auto incrementSize = m_Device
+	auto incrementSize = Dx12Device
 		->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	for (auto i = 0u; i < m_FrameCount; ++i)
@@ -115,7 +115,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 		viewDesc.Texture2D.PlaneSlice = 0;
 
 		// レンダーターゲットビュー生成
-		m_Device->CreateRenderTargetView(m_ColorBuffer[i].Get(), &viewDesc, handle);
+		Dx12Device->CreateRenderTargetView(m_ColorBuffer[i].Get(), &viewDesc, handle);
 
 		m_HandleRTV[i] = handle;
 		handle.ptr += incrementSize;
@@ -128,7 +128,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	}
 
 	// フェンスの生成.
-	hr = m_Device->CreateFence(
+	hr = Dx12Device->CreateFence(
 		m_FenceCounter[m_FrameIndex],
 		D3D12_FENCE_FLAG_NONE,
 		IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf()));
@@ -187,7 +187,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 
 
 	// 深度バッファ生成
-	hr = m_Device->CreateCommittedResource(&DepthHeapProp, D3D12_HEAP_FLAG_NONE, &DepthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &ClearValue, IID_PPV_ARGS(m_DepthBuffer.ReleaseAndGetAddressOf()));
+	hr = Dx12Device->CreateCommittedResource(&DepthHeapProp, D3D12_HEAP_FLAG_NONE, &DepthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &ClearValue, IID_PPV_ARGS(m_DepthBuffer.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return hr;
 
 	// ディスクリプタヒープ設定
@@ -198,11 +198,11 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	DepthHeapDesc.NodeMask = 0;
 
 	// ディスクリプタヒープ生成
-	hr = m_Device->CreateDescriptorHeap(&DepthHeapDesc, IID_PPV_ARGS(m_HeapDSV.ReleaseAndGetAddressOf()));
+	hr = Dx12Device->CreateDescriptorHeap(&DepthHeapDesc, IID_PPV_ARGS(m_HeapDSV.ReleaseAndGetAddressOf()));
 	if (FAILED(hr)) return hr;
 
 	handle = m_HeapDSV->GetCPUDescriptorHandleForHeapStart();
-	incrementSize = m_Device
+	incrementSize = Dx12Device
 		->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC DepthViewDesc = {};
@@ -212,7 +212,7 @@ HRESULT DirectX12Wrapper::Create(HWND hwnd, RECT rc)
 	DepthViewDesc.Flags = D3D12_DSV_FLAG_NONE;
 
 	// DSV生成
-	m_Device->CreateDepthStencilView(m_DepthBuffer.Get(), &DepthViewDesc, handle);
+	Dx12Device->CreateDepthStencilView(m_DepthBuffer.Get(), &DepthViewDesc, handle);
 
 	m_HandleDSV = handle;
 
@@ -224,20 +224,19 @@ void DirectX12Wrapper::Release()
 {
 	// フェンス処理
 	WaitGPU();
-	   m_Device.Reset();
-	   m_CmdQueue.Reset();
-	   m_SwapChain.Reset();
-	   m_CmdList.Reset();
-	   m_HeapRTV.Reset();
-	   m_HeapDSV.Reset();
-	   m_Fence.Reset();
-	   m_DepthBuffer.Reset();
-	   for (auto Idx = 0; Idx < m_FrameCount; ++Idx)
-	   {
-
-		   m_CmdAllocator[Idx].Reset();
-		   m_ColorBuffer[Idx].Reset();
-	   }
+	Dx12Device.Reset();
+	m_CmdQueue.Reset();
+	m_SwapChain.Reset();
+	m_CmdList.Reset();
+	m_HeapRTV.Reset();
+	m_HeapDSV.Reset();
+	m_Fence.Reset();
+	m_DepthBuffer.Reset();
+	for (auto Idx = 0; Idx < m_FrameCount; ++Idx)
+	{
+		m_CmdAllocator[Idx].Reset();
+		m_ColorBuffer[Idx].Reset();
+	}
 
 	// イベント破棄
 	if (m_FenceEvent != nullptr)

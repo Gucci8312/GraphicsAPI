@@ -36,7 +36,7 @@ public:
 	}
 
 	// インスタンス生成
-	bool Init(float Width, float Height, XMFLOAT3 CameraPos, XMFLOAT3 TargetPos, XMFLOAT3 UpVector, float Near, float Far);
+	bool Init(long Width, long Height, XMFLOAT3 CameraPos, XMFLOAT3 TargetPos, XMFLOAT3 UpVector, float Near, float Far);
 
 	void Update();
 	void UpdateSphereCamera(float Radius, float Elevation, float azimuth, const XMFLOAT3& lookat);

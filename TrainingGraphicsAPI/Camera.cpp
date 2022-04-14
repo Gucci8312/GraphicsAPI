@@ -46,7 +46,7 @@ void Camera::UpdateSphereCamera(float Radius, float Elevation, float azimuth, co
 }
 
 // インスタンス生成
-bool Camera::Init(float Width, float Height, XMFLOAT3 CameraPos, XMFLOAT3 TargetPos, XMFLOAT3 UpVector, float Near, float Far)
+bool Camera::Init(long Width, long Height, XMFLOAT3 CameraPos, XMFLOAT3 TargetPos, XMFLOAT3 UpVector, float Near, float Far)
 {
 	m_Width = Width;
 	m_Height = Height;

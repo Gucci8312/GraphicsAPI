@@ -1,12 +1,62 @@
 #include "Application.h"
 
-#define TIMER_ID 1
-#define FREAM_RATE (1000 / 60)
+// 頂点リスト
+Vertex VertexList[]
+{
+	// 前面
+	{{-0.5f,-0.5f, 0.5f},{1.0f, 0.0f, 0.0f, 1.0f} ,{ 0.0f, 0.0f,-1.0f},{0.0f,0.0f}},
+	{{-0.5f, 0.5f, 0.5f},{1.0f, 0.0f, 0.0f, 1.0f} ,{ 0.0f, 0.0f,-1.0f},{1.0f,0.0f}},
+	{{ 0.5f,-0.5f, 0.5f},{1.0f, 0.0f, 0.0f, 1.0f} ,{ 0.0f, 0.0f,-1.0f},{0.0f,1.0f}},
+	{{ 0.5f, 0.5f, 0.5f},{1.0f, 0.0f, 0.0f, 1.0f} ,{ 0.0f, 0.0f,-1.0f},{1.0f,1.0f}},
+
+	// 後面
+	{{-0.5f,-0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{0.0f,0.0f}},
+	{{-0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{1.0f,0.0f}},
+	{{ 0.5f,-0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{0.0f,1.0f}},
+	{{ 0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 1.0f, 1.0f},{ 0.0f, 0.0f, 1.0f},{1.0f,1.0f}},
+
+	// 右面
+	{{ 0.5f, 0.5f, 0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
+	{{ 0.5f, 0.5f,-0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{1.0f,0.0f}},
+	{{ 0.5f,-0.5f, 0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{0.0f,1.0f}},
+	{{ 0.5f,-0.5f,-0.5f},{ 1.0f, 1.0f, 0.0f, 1.0f},{-1.0f, 0.0f, 0.0f},{1.0f,1.0f}},
+
+	// 左面
+	{{-0.5f, 0.5f, 0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
+	{{-0.5f,-0.5f, 0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{1.0f,0.0f}},
+	{{-0.5f, 0.5f,-0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{0.0f,1.0f}},
+	{{-0.5f,-0.5f,-0.5f},{ 0.0f, 0.0f, 1.0f, 1.0f},{ 1.0f, 0.0f, 0.0f},{1.0f,1.0f}},
+
+
+	// 上面
+	{{-0.5f, 0.5f, 0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{0.0f,0.0f}},
+	{{-0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{1.0f,0.0f}},
+	{{ 0.5f, 0.5f, 0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{0.0f,1.0f}},
+	{{ 0.5f, 0.5f,-0.5f},{ 0.0f, 1.0f, 0.0f, 1.0f},{ 0.0f,-1.0f, 0.0f},{1.0f,1.0f}},
+
+	// 下面
+	{{-0.5f,-0.5f, 0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+	{{ 0.5f,-0.5f, 0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{1.0f,0.0f}},
+	{{-0.5f,-0.5f,-0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{0.0f,1.0f}},
+	{{ 0.5f,-0.5f,-0.5f},{ 1.0f, 0.0f, 1.0f, 1.0f},{ 0.0f, 1.0f, 0.0f},{1.0f,1.0f}},
+};
+
+// インデックスリスト
+unsigned int IndexList[]
+{
+	 0,  1,  2,     3,  2,  1,	// 前面
+	 6,  5,  4,     5,  6,  7,  // 後面
+	 8,  9, 10,    11, 10,  9,	// 右面
+	12, 13, 14,    15, 14, 13,	// 左面
+	16, 17, 18,    19, 18, 17,	// 上面
+	20, 21, 22,    23, 22, 21,	// 下面
+};
 
 Application::Application(uint32_t Width, uint32_t Height)
 {
 	m_Width = Width;
 	m_Height = Height;
+	Process = nullptr;
 }
 
 Application::~Application()
@@ -83,12 +133,12 @@ bool Application::InitWnd()
 // アプリケーションの実行
 void Application::Run()
 {
-	if (Initialize())
+	if (Initialize())		// 初期化
 	{
-		MainLoop();
+		MainLoop();			// メインループ
 	}
 
-	Finalize();
+	Finalize();				// 終了
 }
 
 // メインループ
@@ -107,6 +157,7 @@ void Application::MainLoop()
 			}
 			else
 			{
+				Update();
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 
@@ -120,86 +171,143 @@ void Application::MainLoop()
 	}
 }
 
+// 初期化処理
 bool Application::Initialize()
 {
-	std::cout << "DirectX11 >> 0" << std::endl;
-	std::cout << "DirectX12 >> 1" << std::endl;
+	std::cout << "ウィンドウタイプを選んでください" << std::endl;
+	std::cout << "WindowsAPI >> 0" << std::endl;
+	std::cout << "GLFW >> 1" << std::endl;
 
-	// どのAPIを使用するか選択
-	int ChoiceIdx;
+	// どのScreenAPIを使用するか選択
+	int ChoiceScreenAPIIdx, ChoiceAPIIdx = 0;
 	while (true)
 	{
-		std::cin >> ChoiceIdx;
-		if (ChoiceIdx <= 1)
+		std::cin >> ChoiceScreenAPIIdx;
+		//if (ChoiceScreenAPIIdx <= 1)
+		if (ChoiceScreenAPIIdx == 0)
 		{
 			break;
 		}
 	}
 
+	system("cls");
+	if (ChoiceScreenAPIIdx == 0)
+	{
+		Process = &Application::InitWnd;			// ウィンドウズAPI
+		std::cout << "グラフィックAPIを選んでください" << std::endl;
+		std::cout << "DirectX11 >> 0" << std::endl;
+		std::cout << "DirectX12 >> 1" << std::endl;
+	}
+	else
+	{
+		Process = &Application::InitWnd;			// GLFW
+		ChoiceAPIIdx += 2;
+		std::cout << "グラフィックAPIを選んでください" << std::endl;
+		std::cout << "OpenGL >> 0" << std::endl;
+		std::cout << "Vulkan >> 1" << std::endl;
+	}
+
+
+	// どのグラフィックAPIを使用するか選択
+	while (true)
+	{
+		std::cin >> ChoiceAPIIdx;
+		if (ChoiceAPIIdx <= 1)
+		{
+			break;
+		}
+	}
+
+	// コンソール画面終了
 	FreeConsole();
 
-	switch (ChoiceIdx)
+	// API初期化分岐
+	switch (ChoiceAPIIdx)
 	{
-
-	case 0:												// DirectX11 
-		//ApiWrapper = new DirectX11Wrapper;				// APIタイプセット
-		//Process = &Application::RunWindowsAPI;			// 関数ポインタセット
-		exit(1);
+	case 0:													// DirectX11 
+		ApiWrapper.reset(new DirectX11Wrapper);
 		break;
-
-
-	case 1:												// DirectX12
-		ApiWrapper.reset(new DirectX12Wrapper);				// APIタイプセット
-		//Process = &Application::RunWindowsAPI;			// 関数ポインタセット
+	case 1:													// DirectX12
+		ApiWrapper.reset(new DirectX12Wrapper);
+		Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
+		break;
+	case 2:													// OpenGL 
+		ApiWrapper.reset(new DirectX11Wrapper);
+		break;
+	case 3:													// Vulkan
+		ApiWrapper.reset(new DirectX12Wrapper);
 		break;
 
 	default:
 		return false;
 		break;
 	}
-	ApiWrapper.reset(new DirectX12Wrapper);
-	//ApiWrapper = new DirectX12Wrapper;				// APIタイプセット
-	//m_Cube.CubeInit();
 
 	// ウィンドウ初期化
-	if (!InitWnd())
+	if (!(this->*Process)())
 	{
 		return false;
 	}
 
 	RECT rc = { 0,0,m_Width,m_Height };
 
+	// カメラ
+	XMFLOAT3 EyePos = { 0.0f, 0.0f, 5.0f };
+	XMFLOAT3 TargetPos = { 0.0f, 0.0f, 0.0f };
+	XMFLOAT3 UpVector = { 0.0f, 1.0f, 0.0f };
+
+	// カメラ初期化
+	Camera::GetInstance().Init(m_Width, m_Height, EyePos, TargetPos, UpVector, 1.0f, 100.0f);
 	//API初期化
 	HRESULT hr = ApiWrapper->Create(m_hWnd, rc);
 	if (FAILED(hr)) return false;
 
+	//HRESULT hr = Dx.Create(m_hWnd, rc);
+	//if (FAILED(hr)) return false;
+
+	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList), Dx.GetDeviceContext());
+	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
+	//Cube.QuadInit(Dx.GetDevice());
 
 	return true;
 }
 
+// 更新処理
 void Application::Update()
 {
+	//Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
+	Camera::GetInstance().Update();
+	//Cube.Update(Dx.GetFrameIndex());
+	//Cube.Update(Dx.GetDeviceContext());
 }
 
+// 描画処理
 void Application::Render()
 {
-	if (ApiWrapper != nullptr)
+	//if (ApiWrapper != nullptr)
 	{
+		//Dx.BeforeRender();
 		ApiWrapper->BeforeRender();
 
+		//Cube.Draw(Dx.GetCmdList(),Dx.GetFrameIndex());
+		//Cube.Draw(Dx.GetDeviceContext());
+
+		//Dx.AfterRender();
 		ApiWrapper->AfterRender();
 	}
 }
 
+// 終了処理
 void Application::Finalize()
 {
-	if (ApiWrapper != nullptr)
+	//if (ApiWrapper != nullptr)
 	{
+		//Dx.Release();
 		ApiWrapper->Release();
-		//ApiWrapper = nullptr;
 	}
 }
 
+// ウィンドウプロシージャ
 LRESULT CALLBACK Application::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg)

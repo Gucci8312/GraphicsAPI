@@ -26,6 +26,7 @@
     <ClCompile Include="DirectX12Wrapper.cpp" />
     <ClCompile Include="DirectXAllRapper.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ModelData.cpp" />
     <ClCompile Include="Object.cpp" />
   </ItemGroup>
   <ItemGroup>

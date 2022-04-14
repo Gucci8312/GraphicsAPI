@@ -7,9 +7,12 @@
 #include "DirectX11Wrapper.h"
 #include "DirectX12Wrapper.h"
 #include "Object.h"
+#include "Camera.h"
 
 #define		NAME			"APIPractice"
 #define		TITLE			"Renderer"
+#define		TIMER_ID 1
+#define		FREAM_RATE (1000 / 60)
 
 // アプリケーション管理クラス
 class Application
@@ -20,12 +23,17 @@ private:
 	LONG		m_Width;
 	LONG		m_Height;
 	Object		m_Cube;
+	//DirectX11Wrapper Dx;
+	//DirectX12Wrapper Dx;
+	Object      Quad;
+	Object      Cube;
+	XMFLOAT3 CameraPos = { 0.0f, 0.0f, 5.0f };
 
 	void Update();
 	void Render();
-	std::unique_ptr<DirectXAllRapper> ApiWrapper = nullptr;
+	std::unique_ptr<DirectXAllRapper> ApiWrapper ;
 public:
-	//void (Application::* Process)();
+	bool (Application::* Process)() = nullptr;
 	bool Initialize();
 	void Finalize();
 
