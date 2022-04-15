@@ -186,18 +186,19 @@ bool Application::Initialize()
 	std::cout << "GLFW >> 1" << std::endl;
 
 	// どのScreenAPIを使用するか選択
-	int ChoiceScreenAPIIdx, ChoiceAPIIdx = 0;
-	while (true)
-	{
-		std::cin >> ChoiceScreenAPIIdx;
-		//if (ChoiceScreenAPIIdx <= 1)
-		if (ChoiceScreenAPIIdx == 0)
-		{
-			break;
-		}
-	}
+	int ChoiceScreenAPIIdx = 0, ChoiceAPIIdx = 0;
+	//while (true)
+	//{
+	//	std::cin >> ChoiceScreenAPIIdx;
+	//	//if (ChoiceScreenAPIIdx <= 1)
+	//	if (ChoiceScreenAPIIdx == 0)
+	//	{
+	//		break;
+	//	}
+	//}
 
 	system("cls");
+
 	if (ChoiceScreenAPIIdx == 0)
 	{
 		Process = &Application::InitWnd;			// ウィンドウズAPI
@@ -236,7 +237,6 @@ bool Application::Initialize()
 		break;
 	case 1:													// DirectX12
 		ApiWrapper.reset(new DirectX12Wrapper);
-		//Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
 		break;
 	case 2:													// OpenGL 
 		ApiWrapper.reset(new DirectX11Wrapper);
@@ -269,13 +269,9 @@ bool Application::Initialize()
 	HRESULT hr = ApiWrapper->Create(m_hWnd, rc);
 	if (FAILED(hr)) return false;
 
-	//HRESULT hr = Dx.Create(m_hWnd, rc);
-	//if (FAILED(hr)) return false;
 
-	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList), Dx.GetDeviceContext());
-		Cube.PosSet(0.0f,0.0f,0.0f);
-		Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
-	//Cube.QuadInit(Dx.GetDevice());
+	Cube.PosSet(0.0f, 0.0f, 0.0f);
+	Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
 
 	timeBefore = (DWORD)GetTickCount64();
 
@@ -290,22 +286,20 @@ void Application::Update()
 {
 	Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
 	Camera::GetInstance().Update();
-		Cube.Update(ApiWrapper->GetFrameIdx());
-	
+	Cube.Update(ApiWrapper->GetFrameIdx());
+
 	//Cube.Update(Dx.GetDeviceContext());
 }
 
 // 描画処理
 void Application::Render()
 {
-	//if (ApiWrapper != nullptr)
+	if (ApiWrapper != nullptr)
 	{
-		//Dx.BeforeRender();
 		ApiWrapper->BeforeRender();
-			Cube.Draw(ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
-		//Cube.Draw(Dx.GetDeviceContext());
 
-		//Dx.AfterRender();
+		Cube.Draw(ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
+
 		ApiWrapper->AfterRender();
 	}
 }
