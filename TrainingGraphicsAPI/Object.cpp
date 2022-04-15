@@ -1,5 +1,6 @@
 #include "Object.h"
 
+
 bool Object::ObjectCreate(ID3D11Device* Device, Vertex* VertexList, int VertexNum, unsigned short* IndexList, int IndexNum, ID3D11DeviceContext* Context)
 {
 	auto VertexByteSize = sizeof(Vertex) * VertexNum;
@@ -544,3 +545,4 @@ void Object::Update(ID3D11DeviceContext* Context)
 	Context->UpdateSubresource(m_11ConstantBuffer.Get(), 0, NULL, &cb, 0, 0);
 
 }
+
