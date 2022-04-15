@@ -1,7 +1,8 @@
 #include "Application.h"
 
-XMFLOAT3 CameraPos = { -0.0f,20.0f,60.0f };
-DWORD			timeBefore;
+XMFLOAT3 CameraPos = { -0.0f,5.0f,10.0f };
+DWORD	 timeBefore;
+Object Cube;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -272,11 +273,8 @@ bool Application::Initialize()
 	//if (FAILED(hr)) return false;
 
 	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList), Dx.GetDeviceContext());
-	for (int Idx = 0; Idx < 250; Idx++)
-	{
-		Cube[Idx].PosSet(-125.0f+3.0f*Idx,0.0f,0.0f);
-		Cube[Idx].ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
-	}
+		Cube.PosSet(0.0f,0.0f,0.0f);
+		Cube.ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
 	//Cube.QuadInit(Dx.GetDevice());
 
 	timeBefore = (DWORD)GetTickCount64();
@@ -292,10 +290,8 @@ void Application::Update()
 {
 	Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
 	Camera::GetInstance().Update();
-	for (int Idx = 0; Idx < 250; Idx++)
-	{
-		Cube[Idx].Update(ApiWrapper->GetFrameIdx());
-	}
+		Cube.Update(ApiWrapper->GetFrameIdx());
+	
 	//Cube.Update(Dx.GetDeviceContext());
 }
 
@@ -306,11 +302,7 @@ void Application::Render()
 	{
 		//Dx.BeforeRender();
 		ApiWrapper->BeforeRender();
-
-		for (int Idx = 0; Idx < 250; Idx++)
-		{
-			Cube[Idx].Draw(ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
-		}
+			Cube.Draw(ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
 		//Cube.Draw(Dx.GetDeviceContext());
 
 		//Dx.AfterRender();
