@@ -31,7 +31,8 @@ private:
 
 	void Update();
 	void Render();
-	std::unique_ptr<DirectXAllRapper> ApiWrapper ;
+	std::unique_ptr<DirectXAllRapper> ApiWrapper;
+
 public:
 	bool (Application::* Process)() = nullptr;
 	bool Initialize();

@@ -2,6 +2,7 @@
 
 XMFLOAT3 CameraPos = { -0.0f,20.0f,60.0f };
 DWORD			timeBefore;
+Object Cube[1000];
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -66,6 +67,31 @@ Application::Application(uint32_t Width, uint32_t Height)
 
 Application::~Application()
 {
+}
+
+void ThreadObjectInit(int ObjIdx, ID3D12Device* Device)
+{
+	for (int Idx = 0; Idx < 250; Idx++)
+	{
+		Cube[ObjIdx + Idx].PosSet(-125.0f + 3.0f * Idx, 10 - ObjIdx / 5, 0.0f);
+		Cube[ObjIdx + Idx].ObjectCreate(Device, VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
+	}
+}
+
+void ThreadObjectUpdate(int ObjIdx, ID3D12Device* Device, int FrameIndex)
+{
+	for (int Idx = 0; Idx < 250; Idx++)
+	{
+		Cube[ObjIdx + Idx].Update(FrameIndex);
+	}
+}
+
+void ThreadObjectDraw(int ObjIdx, ID3D12GraphicsCommandList* CmdList, int FrameIndex)
+{
+	for (int Idx = 0; Idx < 250; Idx++)
+	{
+		Cube[ObjIdx + Idx].Draw(CmdList, FrameIndex);
+	}
 }
 
 // ウィンドウの初期化
@@ -272,12 +298,21 @@ bool Application::Initialize()
 	//if (FAILED(hr)) return false;
 
 	//Cube.ObjectCreate(Dx.GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList), Dx.GetDeviceContext());
-	for (int Idx = 0; Idx < 250; Idx++)
-	{
-		Cube[Idx].PosSet(-125.0f+3.0f*Idx,0.0f,0.0f);
-		Cube[Idx].ObjectCreate(ApiWrapper->GetDevice(), VertexList, ARRAYSIZE(VertexList), IndexList, ARRAYSIZE(IndexList));
-	}
+
 	//Cube.QuadInit(Dx.GetDevice());
+
+
+	std::thread m_Initthred1(ThreadObjectInit, 0, ApiWrapper->GetDevice());
+	std::thread m_Initthred2(ThreadObjectInit, 250, ApiWrapper->GetDevice());
+	//std::thread m_Initthred3(ThreadObjectInit, 500, ApiWrapper->GetDevice());
+	//std::thread m_Initthred4(ThreadObjectInit, 750, ApiWrapper->GetDevice());
+
+	m_Initthred1.join();
+	m_Initthred2.join();
+	//m_Initthred3.join();
+	//m_Initthred4.join();
+
+
 
 	timeBefore = (DWORD)GetTickCount64();
 
@@ -292,11 +327,16 @@ void Application::Update()
 {
 	Camera::GetInstance().SetCameraPos(XMLoadFloat3(&CameraPos));
 	Camera::GetInstance().Update();
-	for (int Idx = 0; Idx < 250; Idx++)
-	{
-		Cube[Idx].Update(ApiWrapper->GetFrameIdx());
-	}
 	//Cube.Update(Dx.GetDeviceContext());
+	std::thread m_Updatehred1(ThreadObjectUpdate, 0, ApiWrapper->GetDevice(), ApiWrapper->GetFrameIdx());
+	std::thread m_Updatehred2(ThreadObjectUpdate, 250, ApiWrapper->GetDevice(), ApiWrapper->GetFrameIdx());
+	//std::thread m_Updatehred3(ThreadObjectUpdate, 500, ApiWrapper->GetDevice(), ApiWrapper->GetFrameIdx());
+	//std::thread m_Updatehred4(ThreadObjectUpdate, 750, ApiWrapper->GetDevice(), ApiWrapper->GetFrameIdx());
+
+	m_Updatehred1.join();
+	m_Updatehred2.join();
+	//m_Updatehred3.join();
+	//m_Updatehred4.join();
 }
 
 // 描画処理
@@ -307,11 +347,15 @@ void Application::Render()
 		//Dx.BeforeRender();
 		ApiWrapper->BeforeRender();
 
-		for (int Idx = 0; Idx < 250; Idx++)
-		{
-			Cube[Idx].Draw(ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
-		}
-		//Cube.Draw(Dx.GetDeviceContext());
+		std::thread m_Drawthred1(ThreadObjectDraw, 0,ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
+		std::thread m_Drawthred2(ThreadObjectDraw, 250,ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
+		//std::thread m_Drawthred3(ThreadObjectDraw, 500,ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
+		//std::thread m_Drawthred4(ThreadObjectDraw,750, ApiWrapper->GetCmdList(), ApiWrapper->GetFrameIdx());
+
+		m_Drawthred1.join();
+		m_Drawthred2.join();
+		//m_Drawthred3.join();
+		//m_Drawthred4.join();
 
 		//Dx.AfterRender();
 		ApiWrapper->AfterRender();
